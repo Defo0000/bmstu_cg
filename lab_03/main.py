@@ -1,11 +1,11 @@
-from PyQt5 import QtWidgets, QtGui
-from PyQt5.QtGui import QPen, QBrush, QColor, QPainter, QFont
-from PyQt5.QtWidgets import QGraphicsScene, QGraphicsView, QMessageBox, QInputDialog, QDialog, QLineEdit, \
-    QDialogButtonBox, QFormLayout, QButtonGroup
+from PyQt5 import QtWidgets
+from PyQt5.QtGui import QPen, QColor
+from PyQt5.QtWidgets import QGraphicsScene, QGraphicsView, QMessageBox, QButtonGroup
 from window import Ui_MainWindow
-from PyQt5.QtCore import Qt, QRect
+from PyQt5.QtCore import Qt
 import sys
 from math import *
+import numpy as np
 
 class mywindow(QtWidgets.QMainWindow):
     def __init__(self):
@@ -30,8 +30,6 @@ class mywindow(QtWidgets.QMainWindow):
         self.color_group.addButton(self.ui.radioButton_7, 4)
         self.color_group.addButton(self.ui.radioButton_9, 5)
 
-        self.ui.radioButton_9.setChecked(True)
-        self.ui.radioButton_4.setChecked(True)
         self.ui.pushButton.clicked.connect(self.draw_line)
         self.ui.pushButton_2.clicked.connect(self.draw_spectrum)
         self.ui.pushButton_4.clicked.connect(self.clear)
@@ -48,8 +46,8 @@ class mywindow(QtWidgets.QMainWindow):
         graphicView = QGraphicsView(self.scene, self)
         self.pen = QPen(Qt.white, 4)
         graphicView.setGeometry(400, 10, 980, 870)
-        self.scene.setBackgroundBrush(QColor(255, 255, 255));
-        self.scene.setSceneRect(0, 0, 970, 860);
+        self.scene.setBackgroundBrush(QColor(255, 255, 255))
+        self.scene.setSceneRect(0, 0, 970, 860)
 
     def draw_line(self):
         self.get_current_color()
@@ -64,8 +62,7 @@ class mywindow(QtWidgets.QMainWindow):
             pady = 430
             for angle in range(0, 360, abs(int(angle))):
                 self.line_coordinates = [padx, pady, r * sin(radians(angle)) + padx, -r * cos(radians(angle)) + pady]
-                dots = self.cda()
-                self.draw_line_by_dots(dots)
+                self.go_to_current_method()
 
     def get_spectrum_params(self):
         r = self.ui.lineEdit_5.text()
@@ -117,6 +114,8 @@ class mywindow(QtWidgets.QMainWindow):
     def go_to_current_method(self):
         if self.ui.radioButton_4.isChecked():
             self.draw_line_by_dots(self.cda())
+        elif self.ui.radioButton_2.isChecked():
+            self.draw_line_by_dots(self.brezenham_float())
 
     def draw_line_by_dots(self, dots):
         for i in range(0, len(dots), 2):
@@ -158,7 +157,38 @@ class mywindow(QtWidgets.QMainWindow):
         pass
 
     def brezenham_float(self):
-        pass
+        line = list()
+        x_begin, y_begin = self.line_coordinates[0], self.line_coordinates[1]
+        x_end, y_end = self.line_coordinates[2], self.line_coordinates[3]
+        x, y = x_begin, y_begin
+        dx = x_end - x_begin
+        dy = y_end - y_begin
+        sx = int(np.sign(dx))
+        sy = int(np.sign(dy))
+        dx, dy = abs(dx), abs(dy)
+        if dx > dy:
+            fl = 0
+        else:
+            fl = 1
+            dx, dy = dy, dx
+        m = dy/dx
+        e = m - 0.5
+        for i in range(int(dx)):
+            line.append(int(x))
+            line.append(int(y))
+            if fl == 0:
+                if e >= 0:
+                    y += sy
+                    e -= 1
+                x += sx
+                e += m
+            else:
+                if e >= 0:
+                    x += sx
+                    e -= 1
+                y += sy
+                e += m
+        return line
 
     def brezenham_antistepping(self):
         pass
