@@ -38,7 +38,7 @@ class mywindow(QtWidgets.QMainWindow):
         self.create_scene()
 
         self.current_color = (255, 255, 255)
-        self.line_coordinates = [0, 0, 0, 0]
+        self.line_coordinates = [0, 0, 7, 7]
         self.spectrum_params = [0, 0]
 
     def create_scene(self):
@@ -114,8 +114,12 @@ class mywindow(QtWidgets.QMainWindow):
     def go_to_current_method(self):
         if self.ui.radioButton_4.isChecked():
             self.draw_line_by_dots(self.cda())
+        elif self.ui.radioButton_3.isChecked():
+            self.draw_line_by_dots(self.brezenham_int())
         elif self.ui.radioButton_2.isChecked():
             self.draw_line_by_dots(self.brezenham_float())
+        elif self.ui.radioButton_6.isChecked():
+            self.lib_method()
 
     def draw_line_by_dots(self, dots):
         for i in range(0, len(dots), 2):
@@ -154,7 +158,36 @@ class mywindow(QtWidgets.QMainWindow):
         return line
 
     def brezenham_int(self):
-        pass
+        line = list()
+        x_begin, y_begin = int(self.line_coordinates[0]), int(self.line_coordinates[1])
+        x_end, y_end = int(self.line_coordinates[2]), int(self.line_coordinates[3])
+        x, y = x_begin, y_begin
+        dx = x_end - x_begin
+        dy = y_end - y_begin
+        sx = int(np.sign(dx))
+        sy = int(np.sign(dy))
+        dx, dy = abs(dx), abs(dy)
+        if dx > dy:
+            fl = 0
+        else:
+            fl = 1
+            dx, dy = dy, dx
+        e = dy + dy - dx
+        for _ in range(dx):
+            line.append(x)
+            line.append(y)
+            if fl:
+                if e >= 0:
+                    x += sx
+                    e -= dx + dx
+                y += sy
+            else:
+                if e >= 0:
+                    y += sy
+                    e -= dx + dx
+                x += sx
+            e += dy + dy
+        return line
 
     def brezenham_float(self):
         line = list()
@@ -197,7 +230,9 @@ class mywindow(QtWidgets.QMainWindow):
         pass
 
     def lib_method(self):
-        pass
+        x_begin, y_begin = self.line_coordinates[0], self.line_coordinates[1]
+        x_end, y_end = self.line_coordinates[2], self.line_coordinates[3]
+        self.scene.addLine(x_begin, y_begin, x_end, y_end, self.pen)
 
     def valid_float(self, x):
         msg_error = QMessageBox()
