@@ -24,6 +24,7 @@ class mywindow(QtWidgets.QMainWindow):
         self.method_group.addButton(self.ui.radioButton, 3)
         self.method_group.addButton(self.ui.radioButton_5, 4)
         self.method_group.addButton(self.ui.radioButton_6, 5)
+        self.ui.radioButton_4.setChecked(True)
 
         self.color_group = QButtonGroup()
         self.color_group.addButton(self.ui.radioButton_10, 0)
@@ -32,14 +33,23 @@ class mywindow(QtWidgets.QMainWindow):
         self.color_group.addButton(self.ui.radioButton_11, 3)
         self.color_group.addButton(self.ui.radioButton_7, 4)
         self.color_group.addButton(self.ui.radioButton_9, 5)
+        self.ui.radioButton_10.setChecked(True)
 
         self.ui.pushButton.clicked.connect(self.draw_line)
         self.ui.pushButton_2.clicked.connect(self.draw_spectrum)
-        self.ui.pushButton_3.clicked.connect(self.analys_time)
-        self.ui.pushButton_6.clicked.connect(self.analys_stepping)
+        self.ui.pushButton_3.clicked.connect(self.analysys_time)
+        self.ui.pushButton_6.clicked.connect(self.analysys_stepping)
         self.ui.pushButton_4.clicked.connect(self.clear)
         self.ui.pushButton_5.clicked.connect(self.exit)
         self.create_scene()
+
+        self.ui.lineEdit.setText("200")
+        self.ui.lineEdit_2.setText("400")
+        self.ui.lineEdit_3.setText("800")
+        self.ui.lineEdit_4.setText("350")
+
+        self.ui.lineEdit_5.setText("400")
+        self.ui.lineEdit_6.setText("5")
 
         self.current_color = [0, 0, 0]
         self.center = [485, 430]
@@ -51,7 +61,7 @@ class mywindow(QtWidgets.QMainWindow):
         graphicView = QGraphicsView(self.scene, self)
         self.pen = QPen(Qt.white, 4)
         graphicView.setGeometry(400, 10, 980, 870)
-        self.scene.setBackgroundBrush(QColor(255, 255, 255))
+        self.scene.setBackgroundBrush(QColor(0, 0, 0))
         self.scene.setSceneRect(0, 0, 970, 860)
 
     def draw_line(self):
@@ -62,11 +72,13 @@ class mywindow(QtWidgets.QMainWindow):
     def draw_spectrum(self):
         self.get_current_color()
         if ((self.get_spectrum_params()) == 0):
+            self.line_coordinates = [self.center[0], self.center[1], self.center[0] + 1, self.center[1] + 1]
             r, angle = self.spectrum_params[0], self.spectrum_params[1]
-            for angle in range(0, 360, abs(int(angle))):
-                self.line_coordinates = [self.center[0], self.center[1],
-                     r * sin(radians(angle)) + self.center[0], -r * cos(radians(angle)) + self.center[1]]
-                self.go_to_current_method()
+            if self.go_to_current_method() != -1:
+                for angle in range(0, 360, abs(int(angle))):
+                    self.line_coordinates = [self.center[0], self.center[1],
+                         r * sin(radians(angle)) + self.center[0], -r * cos(radians(angle)) + self.center[1]]
+                    self.go_to_current_method()
 
     def get_current_color(self):
         if self.ui.radioButton_10.isChecked():
@@ -300,11 +312,13 @@ class mywindow(QtWidgets.QMainWindow):
         return line
 
     def lib_method(self):
+        self.get_current_color()
+        self.pen.setColor(QColor(self.current_color[0], self.current_color[1], self.current_color[2]))
         x_begin, y_begin = self.line_coordinates[0], self.line_coordinates[1]
         x_end, y_end = self.line_coordinates[2], self.line_coordinates[3]
         self.scene.addLine(x_begin, y_begin, x_end, y_end, self.pen)
 
-    def analys_time(self):
+    def analysys_time(self):
         self.pen.setColor(QColor(255, 255, 255))
         times = [0] * 6
 
@@ -389,7 +403,7 @@ class mywindow(QtWidgets.QMainWindow):
 
         self.scene.clear()
 
-    def analys_stepping(self):
+    def analysys_stepping(self):
         self.pen.setColor(QColor(255, 255, 255))
         steppings = []
         r, angle = 300, 15
