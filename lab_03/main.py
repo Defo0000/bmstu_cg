@@ -37,7 +37,8 @@ class mywindow(QtWidgets.QMainWindow):
         self.ui.radioButton_4.toggled.connect(self.cda)
         self.create_scene()
 
-        self.current_color = (255, 255, 255)
+        self.current_color = [255, 255, 255]
+        self.center = [485, 430]
         self.line_coordinates = [0, 0, 7, 7]
         self.spectrum_params = [0, 0]
 
@@ -58,58 +59,25 @@ class mywindow(QtWidgets.QMainWindow):
         self.get_current_color()
         if ((self.get_spectrum_params()) == 0):
             r, angle = self.spectrum_params[0], self.spectrum_params[1]
-            padx = 485
-            pady = 430
             for angle in range(0, 360, abs(int(angle))):
-                self.line_coordinates = [padx, pady, r * sin(radians(angle)) + padx, -r * cos(radians(angle)) + pady]
+                self.line_coordinates = [self.center[0], self.center[1],
+                     r * sin(radians(angle)) + self.center[0], -r * cos(radians(angle)) + self.center[1]]
                 self.go_to_current_method()
 
-    def get_spectrum_params(self):
-        r = self.ui.lineEdit_5.text()
-        if (self.valid_float(r)):
-            return -1
-        r = float(r)
-        if (r <= 0):
-            msg_error = QMessageBox()
-            msg_error.setIcon(QMessageBox.Critical)
-            msg_error.setStandardButtons(QMessageBox.Close)
-            msg_error.setWindowTitle("Ошибка ввода данных")
-            msg_error.setText("Ошибка: радиус должен быть положительным вещественным числом.")
-            msg_error.exec_()
-
-        angle = self.ui.lineEdit_6.text()
-        if (self.valid_float(angle)):
-            return -1
-
-        angle = float(angle)
-        self.spectrum_params = [r, angle]
-        return 0
-
-    def get_line_coordinates(self):
-
-        x_begin = self.ui.lineEdit.text()
-        if (self.valid_float(x_begin)):
-            return -1
-
-        y_begin = self.ui.lineEdit_2.text()
-        if (self.valid_float(y_begin)):
-            return -1
-
-        x_end = self.ui.lineEdit_3.text()
-        if (self.valid_float(x_end)):
-            return -1
-
-        y_end = self.ui.lineEdit_4.text()
-        if (self.valid_float(y_end)):
-            return -1
-
-        x_begin = float(x_begin)
-        y_begin = float(y_begin)
-        x_end = float(x_end)
-        y_end = float(y_end)
-        self.line_coordinates = [x_begin, y_begin, x_end, y_end]
-
-        return 0
+    def get_current_color(self):
+        if self.ui.radioButton_10.isChecked():
+            self.current_color = [0, 255, 0]
+        elif self.ui.radioButton_12.isChecked():
+            self.current_color = [255, 0, 0]
+        elif self.ui.radioButton_8.isChecked():
+            self.current_color = [0, 0, 255]
+        elif self.ui.radioButton_11.isChecked():
+            self.current_color = [255, 255, 0]
+        elif self.ui.radioButton_7.isChecked():
+            self.current_color = [255, 255, 255]
+        else:
+            self.current_color = [0, 0, 0]
+        self.pen.setColor(QColor(self.current_color[0], self.current_color[1], self.current_color[2]))
 
     def go_to_current_method(self):
         if self.ui.radioButton_4.isChecked():
@@ -118,27 +86,17 @@ class mywindow(QtWidgets.QMainWindow):
             self.draw_line_by_dots(self.brezenham_int())
         elif self.ui.radioButton_2.isChecked():
             self.draw_line_by_dots(self.brezenham_float())
+        elif self.ui.radioButton.isChecked():
+            self.draw_line_by_dots(self.brezenham_smooth())
+        elif self.ui.radioButton_5.isChecked():
+            self.draw_line_by_dots(self.vu())
         elif self.ui.radioButton_6.isChecked():
             self.lib_method()
 
     def draw_line_by_dots(self, dots):
-        for i in range(0, len(dots), 2):
-            self.scene.addEllipse(dots[i], dots[i + 1], 1, 1, self.pen)
-
-    def get_current_color(self):
-        if self.ui.radioButton_10.isChecked():
-            self.current_color = QColor(0, 255, 0)
-        elif self.ui.radioButton_12.isChecked():
-            self.current_color = QColor(255, 0, 0)
-        elif self.ui.radioButton_8.isChecked():
-            self.current_color = QColor(0, 0, 255)
-        elif self.ui.radioButton_11.isChecked():
-            self.current_color = QColor(255, 255, 0)
-        elif self.ui.radioButton_7.isChecked():
-            self.current_color = QColor(255, 255, 255)
-        else:
-            self.current_color = QColor(0, 0, 0)
-        self.pen.setColor(self.current_color)
+        for i in range(0, len(dots), 3):
+            self.pen.setColor(QColor(int(dots[i + 2][0]), int(dots[i + 2][1]), int(dots[i + 2][2])))
+            self.scene.addEllipse(dots[i], dots[i + 1], 0.5, 0.5, self.pen)
 
     def cda(self):
         line = list()
@@ -153,6 +111,7 @@ class mywindow(QtWidgets.QMainWindow):
         for i in range(int(l)):
             line.append(round(x))
             line.append(round(y))
+            line.append(self.current_color[0])
             x += dx
             y += dy
         return line
@@ -176,6 +135,7 @@ class mywindow(QtWidgets.QMainWindow):
         for _ in range(dx):
             line.append(x)
             line.append(y)
+            line.append(self.current_color)
             if fl:
                 if e >= 0:
                     x += sx
@@ -209,6 +169,7 @@ class mywindow(QtWidgets.QMainWindow):
         for i in range(int(dx)):
             line.append(int(x))
             line.append(int(y))
+            line.append(self.current_color)
             if fl == 0:
                 if e >= 0:
                     y += sy
@@ -223,11 +184,102 @@ class mywindow(QtWidgets.QMainWindow):
                 e += m
         return line
 
-    def brezenham_antistepping(self):
-        pass
+    def brezenham_smooth(self):
+        line = list()
+        x_begin, y_begin = self.line_coordinates[0], self.line_coordinates[1]
+        x_end, y_end = self.line_coordinates[2], self.line_coordinates[3]
+        x, y = x_begin, y_begin
+        dx = x_end - x_begin
+        dy = y_end - y_begin
+        sx = int(np.sign(dx))
+        sy = int(np.sign(dy))
+        dx, dy = abs(dx), abs(dy)
+
+        if dx > dy:
+            fl = 0
+        else:
+            fl = 1
+            dx, dy = dy, dx
+
+        m = dy/dx
+        e = 0.5
+        w = 1 - m
+
+        if not fl:
+            for i in range(int(dx)):
+                line.append(int(x))
+                line.append(int(y + sy))
+                temp_color = self.current_color[:]
+                for j in range(3):
+                    temp_color[j] *= e
+                line.append(temp_color)
+                if e >= w:
+                    y += sy
+                    e -= w + m
+                x += sx
+                e += m
+        else:
+            for i in range(int(dx)):
+                line.append(int(x + sx))
+                line.append(int(y))
+                temp_color = self.current_color[:]
+                for j in range(3):
+                    temp_color[j] *= e
+                line.append(temp_color)
+                if e >= w:
+                    x += sx
+                    e -= w + m
+                y += sy
+                e += m
+        return line
 
     def vu(self):
-        pass
+        line = list()
+        x_begin, y_begin = self.line_coordinates[0], self.line_coordinates[1]
+        x_end, y_end = self.line_coordinates[2], self.line_coordinates[3]
+        x, y = x_begin, y_begin
+        dx = x_end - x_begin
+        dy = y_end - y_begin
+        sx = int(np.sign(dx))
+        sy = int(np.sign(dy))
+        dx, dy = abs(dx), abs(dy)
+
+        if dx > dy:
+            fl = 0
+        else:
+            fl = 1
+            dx, dy = dy, dx
+
+        m = dy/dx
+        e = -1
+
+        if not fl:
+            for i in range(int(dx)):
+                line.append(int(x))
+                line.append(int(y))
+                line.append(self.current_color)
+                line.append(int(x))
+                line.append(int(y + sy))
+                line.append(self.current_color)
+                e += m
+                if e >= 0:
+                    y += sy
+                    e -= 1
+                x += sx
+        else:
+            for i in range(int(dx)):
+                line.append(int(x))
+                line.append(int(y))
+                line.append(self.current_color)
+                line.append(int(x + sx))
+                line.append(int(y))
+                line.append(self.current_color)
+                e += m
+                if e >= 0:
+                    x += sx
+                    e -= 1
+                y += sy
+        return line
 
     def lib_method(self):
         x_begin, y_begin = self.line_coordinates[0], self.line_coordinates[1]
@@ -251,6 +303,45 @@ class mywindow(QtWidgets.QMainWindow):
                 msg_error.setText("Ошибка: введено невещественное число.")
                 msg_error.exec_()
                 return -2
+
+    def get_line_coordinates(self):
+        x_begin = self.ui.lineEdit.text()
+        if (self.valid_float(x_begin)):
+            return -1
+        y_begin = self.ui.lineEdit_2.text()
+        if (self.valid_float(y_begin)):
+            return -1
+        x_end = self.ui.lineEdit_3.text()
+        if (self.valid_float(x_end)):
+            return -1
+        y_end = self.ui.lineEdit_4.text()
+        if (self.valid_float(y_end)):
+            return -1
+        x_begin = float(x_begin)
+        y_begin = float(y_begin)
+        x_end = float(x_end)
+        y_end = float(y_end)
+        self.line_coordinates = [x_begin, y_begin, x_end, y_end]
+        return 0
+
+    def get_spectrum_params(self):
+        r = self.ui.lineEdit_5.text()
+        if (self.valid_float(r)):
+            return -1
+        r = float(r)
+        if (r <= 0):
+            msg_error = QMessageBox()
+            msg_error.setIcon(QMessageBox.Critical)
+            msg_error.setStandardButtons(QMessageBox.Close)
+            msg_error.setWindowTitle("Ошибка ввода данных")
+            msg_error.setText("Ошибка: радиус должен быть положительным вещественным числом.")
+            msg_error.exec_()
+        angle = self.ui.lineEdit_6.text()
+        if (self.valid_float(angle)):
+            return -1
+        angle = float(angle)
+        self.spectrum_params = [r, angle]
+        return 0
 
     def clear(self):
         self.scene.clear()
