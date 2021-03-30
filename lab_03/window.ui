@@ -510,14 +510,14 @@ background-color: rgb(52, 101, 164);</string>
      <string notr="true">background-color: rgb(238, 238, 236);</string>
     </property>
     <property name="text">
-     <string>Сравнить алгоритмы</string>
+     <string>Сравнить эффективность</string>
     </property>
    </widget>
    <widget class="QPushButton" name="pushButton_4">
     <property name="geometry">
      <rect>
       <x>40</x>
-      <y>750</y>
+      <y>800</y>
       <width>321</width>
       <height>30</height>
      </rect>
@@ -549,7 +549,7 @@ background-color: rgb(52, 101, 164);</string>
     <property name="geometry">
      <rect>
       <x>40</x>
-      <y>800</y>
+      <y>750</y>
       <width>321</width>
       <height>30</height>
      </rect>
@@ -558,7 +558,7 @@ background-color: rgb(52, 101, 164);</string>
      <string notr="true">background-color: rgb(238, 238, 236);</string>
     </property>
     <property name="text">
-     <string>Справка</string>
+     <string>Сравнить ступенчатость</string>
     </property>
    </widget>
    <widget class="QRadioButton" name="radioButton_11">

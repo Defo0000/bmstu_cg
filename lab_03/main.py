@@ -6,6 +6,9 @@ from PyQt5.QtCore import Qt
 import sys
 from math import *
 import numpy as np
+import time
+
+import matplotlib.pyplot as plt
 
 class mywindow(QtWidgets.QMainWindow):
     def __init__(self):
@@ -32,14 +35,15 @@ class mywindow(QtWidgets.QMainWindow):
 
         self.ui.pushButton.clicked.connect(self.draw_line)
         self.ui.pushButton_2.clicked.connect(self.draw_spectrum)
+        self.ui.pushButton_3.clicked.connect(self.analys_time)
+        self.ui.pushButton_6.clicked.connect(self.analys_stepping)
         self.ui.pushButton_4.clicked.connect(self.clear)
         self.ui.pushButton_5.clicked.connect(self.exit)
-        self.ui.radioButton_4.toggled.connect(self.cda)
         self.create_scene()
 
-        self.current_color = [255, 255, 255]
+        self.current_color = [0, 0, 0]
         self.center = [485, 430]
-        self.line_coordinates = [0, 0, 7, 7]
+        self.line_coordinates = [0, 0, 1, 1]
         self.spectrum_params = [0, 0]
 
     def create_scene(self):
@@ -77,7 +81,6 @@ class mywindow(QtWidgets.QMainWindow):
             self.current_color = [255, 255, 255]
         else:
             self.current_color = [0, 0, 0]
-        self.pen.setColor(QColor(self.current_color[0], self.current_color[1], self.current_color[2]))
 
     def go_to_current_method(self):
         if self.ui.radioButton_4.isChecked():
@@ -96,7 +99,7 @@ class mywindow(QtWidgets.QMainWindow):
     def draw_line_by_dots(self, dots):
         for i in range(0, len(dots), 3):
             self.pen.setColor(QColor(int(dots[i + 2][0]), int(dots[i + 2][1]), int(dots[i + 2][2])))
-            self.scene.addEllipse(dots[i], dots[i + 1], 0.5, 0.5, self.pen)
+            self.scene.addEllipse(dots[i], dots[i + 1], 1, 1, self.pen)
 
     def cda(self):
         line = list()
@@ -111,7 +114,7 @@ class mywindow(QtWidgets.QMainWindow):
         for i in range(int(l)):
             line.append(round(x))
             line.append(round(y))
-            line.append(self.current_color[0])
+            line.append(self.current_color)
             x += dx
             y += dy
         return line
@@ -231,6 +234,7 @@ class mywindow(QtWidgets.QMainWindow):
                     e -= w + m
                 y += sy
                 e += m
+
         return line
 
     def vu(self):
@@ -257,10 +261,17 @@ class mywindow(QtWidgets.QMainWindow):
             for i in range(int(dx)):
                 line.append(int(x))
                 line.append(int(y))
-                line.append(self.current_color)
+                temp_color = self.current_color[:]
+                for j in range(3):
+                    temp_color[j] *= (1 - e)
+                line.append(temp_color)
+
                 line.append(int(x))
                 line.append(int(y + sy))
-                line.append(self.current_color)
+                temp_color = self.current_color[:]
+                for j in range(3):
+                    temp_color[j] *= (1 + e)
+                line.append(temp_color)
                 e += m
                 if e >= 0:
                     y += sy
@@ -270,10 +281,17 @@ class mywindow(QtWidgets.QMainWindow):
             for i in range(int(dx)):
                 line.append(int(x))
                 line.append(int(y))
-                line.append(self.current_color)
+                temp_color = self.current_color[:]
+                for j in range(3):
+                    temp_color[j] *= (1 - e)
+                line.append(temp_color)
+
                 line.append(int(x + sx))
                 line.append(int(y))
-                line.append(self.current_color)
+                temp_color = self.current_color[:]
+                for j in range(3):
+                    temp_color[j] *= (1 + e)
+                line.append(temp_color)
                 e += m
                 if e >= 0:
                     x += sx
@@ -285,6 +303,117 @@ class mywindow(QtWidgets.QMainWindow):
         x_begin, y_begin = self.line_coordinates[0], self.line_coordinates[1]
         x_end, y_end = self.line_coordinates[2], self.line_coordinates[3]
         self.scene.addLine(x_begin, y_begin, x_end, y_end, self.pen)
+
+    def analys_time(self):
+        self.pen.setColor(QColor(255, 255, 255))
+        times = [0] * 6
+
+        start = time.time()
+        self.line_coordinates = [0, 0, 300, 600]
+        r, angle = 300, 15
+        for angle in range(0, 360 * 20, abs(int(angle))):
+            self.line_coordinates = [self.center[0], self.center[1],
+                                     r * sin(radians(angle)) + self.center[0],
+                                     -r * cos(radians(angle)) + self.center[1]]
+            self.cda()
+        end = time.time()
+        times[0] = end - start
+
+        start = time.time()
+        self.line_coordinates = [0, 0, 300, 600]
+        r, angle = 300, 15
+        for angle in range(0, 360 * 20, abs(int(angle))):
+            self.line_coordinates = [self.center[0], self.center[1],
+                                     r * sin(radians(angle)) + self.center[0],
+                                     -r * cos(radians(angle)) + self.center[1]]
+            self.brezenham_int()
+        end = time.time()
+        times[1] = end - start
+
+        start = time.time()
+        self.line_coordinates = [0, 0, 300, 600]
+        r, angle = 300, 15
+        for angle in range(0, 360 * 20, abs(int(angle))):
+            self.line_coordinates = [self.center[0], self.center[1],
+                                     r * sin(radians(angle)) + self.center[0],
+                                     -r * cos(radians(angle)) + self.center[1]]
+            self.brezenham_float()
+        end = time.time()
+        times[2] = end - start
+
+        start = time.time()
+        self.line_coordinates = [0, 0, 300, 600]
+        r, angle = 300, 15
+        for angle in range(0, 360 * 20, abs(int(angle))):
+            self.line_coordinates = [self.center[0], self.center[1],
+                                     r * sin(radians(angle)) + self.center[0],
+                                     -r * cos(radians(angle)) + self.center[1]]
+            self.brezenham_smooth()
+        end = time.time()
+        times[3] = end - start
+
+        start = time.time()
+        self.line_coordinates = [0, 0, 360 * 3, 600]
+        r, angle = 300, 15
+        for angle in range(0, 360 * 20, abs(int(angle))):
+            self.line_coordinates = [self.center[0], self.center[1],
+                                     r * sin(radians(angle)) + self.center[0],
+                                     -r * cos(radians(angle)) + self.center[1]]
+            self.vu()
+        end = time.time()
+        times[4] = end - start
+
+        start = time.time()
+        self.line_coordinates = [0, 0, 300, 600]
+        r, angle = 300, 15
+        for angle in range(0, 360 * 20, abs(int(angle))):
+            self.line_coordinates = [self.center[0], self.center[1],
+                                     r * sin(radians(angle)) + self.center[0],
+                                     -r * cos(radians(angle)) + self.center[1]]
+            self.lib_method()
+        end = time.time()
+        times[5] = end - start
+
+        fig, ax = plt.subplots()
+        plt.title("Сравнение алгоритмов")
+        ax.bar(["ЦДА", "Брезенхем\n(int)", "Брезенхем\n(float)", "Брезенхем\n(сглаживание)",
+                "Ву", "Библиотечный\nметод"], times)
+        ax.set_facecolor('white')
+        ax.set_xlabel('Алгоритм')
+        ax.set_ylabel('Время')
+        fig.set_facecolor('white')
+        fig.set_figwidth(8)
+        fig.set_figheight(4)
+
+        plt.show()
+
+        self.scene.clear()
+
+    def analys_stepping(self):
+        self.pen.setColor(QColor(255, 255, 255))
+        steppings = []
+        r, angle = 300, 15
+        for i in range(angle, 90, angle):
+            self.line_coordinates = [self.center[0], self.center[1],
+                                     r * sin(radians(i)) + self.center[0],
+                                     -r * cos(radians(i)) + self.center[1]]
+            xb, yb = self.line_coordinates[0], self.line_coordinates[1]
+            xe, ye = self.line_coordinates[2], self.line_coordinates[3]
+            length = sqrt((xb-xe) ** 2 + (yb-ye) ** 2)
+            dx = abs(xe-xb)
+            dy = abs(ye-yb)
+            steppings.append([i, length / min(dx, dy)])
+        x = []
+        y = []
+        for i in range(len(steppings)):
+            x.append(steppings[i][0])
+            y.append(steppings[i][1])
+
+        plt.plot(x, y)
+        plt.xlabel("Угол в градусах")
+        plt.ylabel("Кол-во ступенек")
+        plt.show()
+
 
     def valid_float(self, x):
         msg_error = QMessageBox()
@@ -342,6 +471,22 @@ class mywindow(QtWidgets.QMainWindow):
         angle = float(angle)
         self.spectrum_params = [r, angle]
         return 0
+
+    def show_color_error(self):
+        msg_error = QMessageBox()
+        msg_error.setIcon(QMessageBox.Critical)
+        msg_error.setStandardButtons(QMessageBox.Close)
+        msg_error.setWindowTitle("Ошибка ввода данных")
+        msg_error.setText("Необходимо выбрать один из предложенных цветов.")
+        msg_error.exec_()
+
+    def show_method_error(self):
+        msg_error = QMessageBox()
+        msg_error.setIcon(QMessageBox.Critical)
+        msg_error.setStandardButtons(QMessageBox.Close)
+        msg_error.setWindowTitle("Ошибка ввода данных")
+        msg_error.setText("Необходимо выбрать один из предложенных методов.")
+        msg_error.exec_()
 
     def clear(self):
         self.scene.clear()
