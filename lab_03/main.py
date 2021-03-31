@@ -59,7 +59,7 @@ class mywindow(QtWidgets.QMainWindow):
     def create_scene(self):
         self.scene = QGraphicsScene()
         graphicView = QGraphicsView(self.scene, self)
-        self.pen = QPen(Qt.white, 4)
+        self.pen = QPen(Qt.white, 1)
         graphicView.setGeometry(400, 10, 980, 870)
         self.scene.setBackgroundBrush(QColor(0, 0, 0))
         self.scene.setSceneRect(0, 0, 970, 860)
@@ -83,6 +83,7 @@ class mywindow(QtWidgets.QMainWindow):
     def get_current_color(self):
         if self.ui.radioButton_10.isChecked():
             self.current_color = [0, 255, 0]
+            print("HERE")
         elif self.ui.radioButton_12.isChecked():
             self.current_color = [255, 0, 0]
         elif self.ui.radioButton_8.isChecked():
@@ -115,8 +116,8 @@ class mywindow(QtWidgets.QMainWindow):
 
     def cda(self):
         line = list()
-        x_begin, y_begin = self.line_coordinates[0], self.line_coordinates[1]
-        x_end, y_end = self.line_coordinates[2], self.line_coordinates[3]
+        x_begin, y_begin = int(self.line_coordinates[0]), int(self.line_coordinates[1])
+        x_end, y_end = int(self.line_coordinates[2]), int(self.line_coordinates[3])
         dx, dy = x_end - x_begin, y_end - y_begin
         delta_x, delta_y = abs(dx), abs(dy)
         l = delta_x if delta_x > delta_y else delta_y
@@ -249,66 +250,66 @@ class mywindow(QtWidgets.QMainWindow):
 
         return line
 
+    def fpart(self, x):
+        return x - int(x)
+
+    def rfpart(self, x):
+        return 1 - self.fpart(x)
+
     def vu(self):
         line = list()
         x_begin, y_begin = self.line_coordinates[0], self.line_coordinates[1]
         x_end, y_end = self.line_coordinates[2], self.line_coordinates[3]
-        x, y = x_begin, y_begin
+
         dx = x_end - x_begin
         dy = y_end - y_begin
-        sx = int(np.sign(dx))
-        sy = int(np.sign(dy))
-        dx, dy = abs(dx), abs(dy)
 
-        if dx > dy:
-            fl = 0
+        m = 1
+        if fabs(dy) > fabs(dx):
+            if y_begin > y_end:
+                x_begin, x_end = x_end, x_begin
+                y_begin, y_end = y_end, y_begin
+            if dy != 0:
+                m = dx / dy
+            for y in range(round(y_begin), round(y_end) + 1):
+                d1 = x_begin - floor(x_begin)
+                d2 = 1 - d1
+                line.append(int(x_begin))
+                line.append(y)
+                temp_color = self.current_color[:]
+                for j in range(3):
+                    temp_color[j] = temp_color[j] * round(fabs(d2))
+                line.append(temp_color)
+                line.append(int(x_begin) + 1)
+                line.append(y)
+                temp_color = self.current_color[:]
+                for j in range(3):
+                    temp_color[j] = temp_color[j] * round(fabs(d1))
+                line.append(temp_color)
+                x_begin += m
         else:
-            fl = 1
-            dx, dy = dy, dx
+            if x_begin > x_end:
+                x_begin, x_end = x_end, x_begin
+                y_begin, y_end = y_end, y_begin
 
-        m = dy/dx
-        e = -1
-
-        if not fl:
-            for i in range(int(dx)):
-                line.append(int(x))
-                line.append(int(y))
+            if dx != 0:
+                m = dy / dx
+            for x in range(round(x_begin), round(x_end) + 1):
+                d1 = y_begin - floor(y_begin)
+                d2 = 1 - d1
+                line.append(x)
+                line.append(int(y_begin))
                 temp_color = self.current_color[:]
                 for j in range(3):
-                    temp_color[j] *= (1 - e)
+                    temp_color[j] = temp_color[j] * round(fabs(d2))
                 line.append(temp_color)
-
-                line.append(int(x))
-                line.append(int(y + sy))
+                line.append(x)
+                line.append(int(y_begin) + 1)
                 temp_color = self.current_color[:]
                 for j in range(3):
-                    temp_color[j] *= (1 + e)
+                    temp_color[j] = temp_color[j] * round(fabs(d1))
                 line.append(temp_color)
-                e += m
-                if e >= 0:
-                    y += sy
-                    e -= 1
-                x += sx
-        else:
-            for i in range(int(dx)):
-                line.append(int(x))
-                line.append(int(y))
-                temp_color = self.current_color[:]
-                for j in range(3):
-                    temp_color[j] *= (1 - e)
-                line.append(temp_color)
-
-                line.append(int(x + sx))
-                line.append(int(y))
-                temp_color = self.current_color[:]
-                for j in range(3):
-                    temp_color[j] *= (1 + e)
-                line.append(temp_color)
-                e += m
-                if e >= 0:
-                    x += sx
-                    e -= 1
-                y += sy
+                y_begin += m
         return line
 
     def lib_method(self):
@@ -404,28 +405,123 @@ class mywindow(QtWidgets.QMainWindow):
         self.scene.clear()
 
     def analysys_stepping(self):
+
         self.pen.setColor(QColor(255, 255, 255))
         steppings = []
-        r, angle = 300, 15
+        r, angle = 300, 5
         for i in range(angle, 90, angle):
             self.line_coordinates = [self.center[0], self.center[1],
                                      r * sin(radians(i)) + self.center[0],
                                      -r * cos(radians(i)) + self.center[1]]
-            xb, yb = self.line_coordinates[0], self.line_coordinates[1]
-            xe, ye = self.line_coordinates[2], self.line_coordinates[3]
-            length = sqrt((xb-xe) ** 2 + (yb-ye) ** 2)
+            line = self.cda()
+            xb, yb = line[0], line[1]
+            xe, ye = line[len(line) - 3], line[len(line) - 2]
             dx = abs(xe-xb)
             dy = abs(ye-yb)
-            steppings.append([i, length / min(dx, dy)])
+            steppings.append([i, min(dx, dy)])
         x = []
         y = []
         for i in range(len(steppings)):
             x.append(steppings[i][0])
             y.append(steppings[i][1])
 
-        plt.plot(x, y)
+        plt.plot(x, y, color = "r", label = "ЦДА")
         plt.xlabel("Угол в градусах")
         plt.ylabel("Кол-во ступенек")
+        plt.legend()
+
+        steppings = []
+        r, angle = 300, 5
+        for i in range(angle, 90, angle):
+            self.line_coordinates = [self.center[0], self.center[1],
+                                     r * sin(radians(i)) + self.center[0],
+                                     -r * cos(radians(i)) + self.center[1]]
+            line = self.brezenham_int()
+            xb, yb = line[0], line[1]
+            xe, ye = line[len(line) - 3], line[len(line) - 2]
+            dx = abs(xe - xb)
+            dy = abs(ye - yb)
+            steppings.append([i, min(dx, dy)])
+        x = []
+        y = []
+        for i in range(len(steppings)):
+            x.append(steppings[i][0])
+            y.append(steppings[i][1])
+
+        plt.plot(x, y, color="c", label="Брезенхем(int)")
+        plt.xlabel("Угол в градусах")
+        plt.ylabel("Кол-во ступенек")
+        plt.legend()
+
+        steppings = []
+        r, angle = 300, 5
+        for i in range(angle, 90, angle):
+            self.line_coordinates = [self.center[0], self.center[1],
+                                     r * sin(radians(i)) + self.center[0],
+                                     -r * cos(radians(i)) + self.center[1]]
+            line = self.brezenham_float()
+            xb, yb = line[0], line[1]
+            xe, ye = line[len(line) - 3], line[len(line) - 2]
+            dx = abs(xe - xb)
+            dy = abs(ye - yb)
+            steppings.append([i, min(dx, dy)])
+        x = []
+        y = []
+        for i in range(len(steppings)):
+            x.append(steppings[i][0])
+            y.append(steppings[i][1])
+
+        plt.plot(x, y, color="b", label="Брезенхем(float)")
+        plt.xlabel("Угол в градусах")
+        plt.ylabel("Кол-во ступенек")
+        plt.legend()
+
+        steppings = []
+        r, angle = 300, 5
+        for i in range(angle, 90, angle):
+            self.line_coordinates = [self.center[0], self.center[1],
+                                     r * sin(radians(i)) + self.center[0],
+                                     -r * cos(radians(i)) + self.center[1]]
+            line = self.brezenham_smooth()
+            xb, yb = line[0], line[1]
+            xe, ye = line[len(line) - 3], line[len(line) - 2]
+            dx = abs(xe - xb)
+            dy = abs(ye - yb)
+            steppings.append([i, min(dx, dy)])
+        x = []
+        y = []
+        for i in range(len(steppings)):
+            x.append(steppings[i][0])
+            y.append(steppings[i][1])
+
+        plt.plot(x, y, color="y", label="Брезенхем(сглаживание)")
+        plt.xlabel("Угол в градусах")
+        plt.ylabel("Кол-во ступенек")
+        plt.legend()
+
+        steppings = []
+        r, angle = 300, 1
+        for i in range(angle, 90, angle):
+            self.line_coordinates = [self.center[0], self.center[1],
+                                     r * sin(radians(i)) + self.center[0],
+                                     -r * cos(radians(i)) + self.center[1]]
+            line = self.vu()
+            xb, yb = line[0], line[1]
+            xe, ye = line[len(line) - 3], line[len(line) - 2]
+            dx = abs(xe - xb)
+            dy = abs(ye - yb)
+            steppings.append([i, min(dx, dy)])
+        x = []
+        y = []
+        for i in range(len(steppings)):
+            x.append(steppings[i][0])
+            y.append(steppings[i][1])
+
+        plt.plot(x, y, color="g", label="ВУ")
+        plt.xlabel("Угол в градусах")
+        plt.ylabel("Кол-во ступенек")
+        plt.legend()
+
         plt.show()
 
 
