@@ -46,13 +46,17 @@ class mywindow(QtWidgets.QMainWindow):
         self.ui.lineEdit.setText("200")
         self.ui.lineEdit_2.setText("400")
         self.ui.lineEdit_3.setText("800")
-        self.ui.lineEdit_4.setText("350")
+        self.ui.lineEdit_4.setText("300")
 
         self.ui.lineEdit_5.setText("400")
         self.ui.lineEdit_6.setText("5")
 
         self.current_color = [0, 0, 0]
         self.center = [485, 430]
+
+        self.ui.lineEdit_8.setText(str(self.center[0]))
+        self.ui.lineEdit_7.setText(str(self.center[1]))
+
         self.line_coordinates = [0, 0, 1, 1]
         self.spectrum_params = [0, 0]
 
@@ -71,7 +75,7 @@ class mywindow(QtWidgets.QMainWindow):
 
     def draw_spectrum(self):
         self.get_current_color()
-        if ((self.get_spectrum_params()) == 0):
+        if ((self.get_spectrum_params()) == 0 and self.get_center() == 0):
             self.line_coordinates = [self.center[0], self.center[1], self.center[0] + 1, self.center[1] + 1]
             r, angle = self.spectrum_params[0], self.spectrum_params[1]
             if self.go_to_current_method() != -1:
@@ -83,7 +87,6 @@ class mywindow(QtWidgets.QMainWindow):
     def get_current_color(self):
         if self.ui.radioButton_10.isChecked():
             self.current_color = [0, 255, 0]
-            print("HERE")
         elif self.ui.radioButton_12.isChecked():
             self.current_color = [255, 0, 0]
         elif self.ui.radioButton_8.isChecked():
@@ -112,12 +115,17 @@ class mywindow(QtWidgets.QMainWindow):
     def draw_line_by_dots(self, dots):
         for i in range(0, len(dots), 3):
             self.pen.setColor(QColor(int(dots[i + 2][0]), int(dots[i + 2][1]), int(dots[i + 2][2])))
-            self.scene.addEllipse(dots[i], dots[i + 1], 1, 1, self.pen)
+            self.scene.addLine(dots[i], dots[i + 1], dots[i], dots[i + 1], self.pen)
 
     def cda(self):
         line = list()
         x_begin, y_begin = int(self.line_coordinates[0]), int(self.line_coordinates[1])
         x_end, y_end = int(self.line_coordinates[2]), int(self.line_coordinates[3])
+        if (x_end == x_begin) and (y_end == y_begin):
+            line.append(x_begin)
+            line.append(y_begin)
+            line.append(self.current_color)
+            return line
         dx, dy = x_end - x_begin, y_end - y_begin
         delta_x, delta_y = abs(dx), abs(dy)
         l = delta_x if delta_x > delta_y else delta_y
@@ -136,6 +144,11 @@ class mywindow(QtWidgets.QMainWindow):
         line = list()
         x_begin, y_begin = int(self.line_coordinates[0]), int(self.line_coordinates[1])
         x_end, y_end = int(self.line_coordinates[2]), int(self.line_coordinates[3])
+        if (x_end == x_begin) and (y_end == y_begin):
+            line.append(x_begin)
+            line.append(y_begin)
+            line.append(self.current_color)
+            return line
         x, y = x_begin, y_begin
         dx = x_end - x_begin
         dy = y_end - y_begin
@@ -167,8 +180,13 @@ class mywindow(QtWidgets.QMainWindow):
 
     def brezenham_float(self):
         line = list()
-        x_begin, y_begin = self.line_coordinates[0], self.line_coordinates[1]
-        x_end, y_end = self.line_coordinates[2], self.line_coordinates[3]
+        x_begin, y_begin = int(self.line_coordinates[0]), int(self.line_coordinates[1])
+        x_end, y_end = int(self.line_coordinates[2]), int(self.line_coordinates[3])
+        if fabs(x_end - x_begin) < 1e-5 and fabs(y_end - y_begin) < 1e-5:
+            line.append(x_begin)
+            line.append(y_begin)
+            line.append(self.current_color)
+            return line
         x, y = x_begin, y_begin
         dx = x_end - x_begin
         dy = y_end - y_begin
@@ -204,6 +222,11 @@ class mywindow(QtWidgets.QMainWindow):
         line = list()
         x_begin, y_begin = self.line_coordinates[0], self.line_coordinates[1]
         x_end, y_end = self.line_coordinates[2], self.line_coordinates[3]
+        if fabs(x_end - x_begin) < 1e-5 and fabs(y_end - y_begin) < 1e-5:
+            line.append(x_begin)
+            line.append(y_begin)
+            line.append(self.current_color)
+            return line
         x, y = x_begin, y_begin
         dx = x_end - x_begin
         dy = y_end - y_begin
@@ -250,16 +273,16 @@ class mywindow(QtWidgets.QMainWindow):
 
         return line
 
-    def fpart(self, x):
-        return x - int(x)
-
-    def rfpart(self, x):
-        return 1 - self.fpart(x)
-
     def vu(self):
         line = list()
         x_begin, y_begin = self.line_coordinates[0], self.line_coordinates[1]
         x_end, y_end = self.line_coordinates[2], self.line_coordinates[3]
+
+        if fabs(x_end - x_begin) < 1e-5 and fabs(y_end - y_begin) < 1e-5:
+            line.append(x_begin)
+            line.append(y_begin)
+            line.append(self.current_color)
+            return line
 
         dx = x_end - x_begin
         dy = y_end - y_begin
@@ -323,10 +346,12 @@ class mywindow(QtWidgets.QMainWindow):
         self.pen.setColor(QColor(255, 255, 255))
         times = [0] * 6
 
+        reps = 20
+
         start = time.time()
         self.line_coordinates = [0, 0, 300, 600]
         r, angle = 300, 15
-        for angle in range(0, 360 * 20, abs(int(angle))):
+        for angle in range(0, 360 * reps, abs(int(angle))):
             self.line_coordinates = [self.center[0], self.center[1],
                                      r * sin(radians(angle)) + self.center[0],
                                      -r * cos(radians(angle)) + self.center[1]]
@@ -337,7 +362,7 @@ class mywindow(QtWidgets.QMainWindow):
         start = time.time()
         self.line_coordinates = [0, 0, 300, 600]
         r, angle = 300, 15
-        for angle in range(0, 360 * 20, abs(int(angle))):
+        for angle in range(0, 360 * reps, abs(int(angle))):
             self.line_coordinates = [self.center[0], self.center[1],
                                      r * sin(radians(angle)) + self.center[0],
                                      -r * cos(radians(angle)) + self.center[1]]
@@ -348,7 +373,7 @@ class mywindow(QtWidgets.QMainWindow):
         start = time.time()
         self.line_coordinates = [0, 0, 300, 600]
         r, angle = 300, 15
-        for angle in range(0, 360 * 20, abs(int(angle))):
+        for angle in range(0, 360 * reps, abs(int(angle))):
             self.line_coordinates = [self.center[0], self.center[1],
                                      r * sin(radians(angle)) + self.center[0],
                                      -r * cos(radians(angle)) + self.center[1]]
@@ -359,7 +384,7 @@ class mywindow(QtWidgets.QMainWindow):
         start = time.time()
         self.line_coordinates = [0, 0, 300, 600]
         r, angle = 300, 15
-        for angle in range(0, 360 * 20, abs(int(angle))):
+        for angle in range(0, 360 * reps, abs(int(angle))):
             self.line_coordinates = [self.center[0], self.center[1],
                                      r * sin(radians(angle)) + self.center[0],
                                      -r * cos(radians(angle)) + self.center[1]]
@@ -368,9 +393,9 @@ class mywindow(QtWidgets.QMainWindow):
         times[3] = end - start
 
         start = time.time()
-        self.line_coordinates = [0, 0, 360 * 3, 600]
+        self.line_coordinates = [0, 0, 360, 600]
         r, angle = 300, 15
-        for angle in range(0, 360 * 20, abs(int(angle))):
+        for angle in range(0, 360 * reps, abs(int(angle))):
             self.line_coordinates = [self.center[0], self.center[1],
                                      r * sin(radians(angle)) + self.center[0],
                                      -r * cos(radians(angle)) + self.center[1]]
@@ -381,7 +406,7 @@ class mywindow(QtWidgets.QMainWindow):
         start = time.time()
         self.line_coordinates = [0, 0, 300, 600]
         r, angle = 300, 15
-        for angle in range(0, 360 * 20, abs(int(angle))):
+        for angle in range(0, 360 * reps, abs(int(angle))):
             self.line_coordinates = [self.center[0], self.center[1],
                                      r * sin(radians(angle)) + self.center[0],
                                      -r * cos(radians(angle)) + self.center[1]]
@@ -448,7 +473,7 @@ class mywindow(QtWidgets.QMainWindow):
             x.append(steppings[i][0])
             y.append(steppings[i][1])
 
-        plt.plot(x, y, color="c", label="Брезенхем(int)")
+        plt.plot(x, y, color="g", label="Брезенхем(int)")
         plt.xlabel("Угол в градусах")
         plt.ylabel("Кол-во ступенек")
         plt.legend()
@@ -517,13 +542,15 @@ class mywindow(QtWidgets.QMainWindow):
             x.append(steppings[i][0])
             y.append(steppings[i][1])
 
-        plt.plot(x, y, color="g", label="ВУ")
+        plt.plot(x, y, color="c", label="ВУ")
         plt.xlabel("Угол в градусах")
         plt.ylabel("Кол-во ступенек")
+        length = sqrt((self.line_coordinates[0] - self.line_coordinates[2]) ** 2 +
+        (self.line_coordinates[1] - self.line_coordinates[3]) ** 2)
+        plt.title("Длина отрезка: " + str(int(length)))
         plt.legend()
 
         plt.show()
-
 
     def valid_float(self, x):
         msg_error = QMessageBox()
@@ -575,11 +602,32 @@ class mywindow(QtWidgets.QMainWindow):
             msg_error.setWindowTitle("Ошибка ввода данных")
             msg_error.setText("Ошибка: радиус должен быть положительным вещественным числом.")
             msg_error.exec_()
+            return -1
         angle = self.ui.lineEdit_6.text()
         if (self.valid_float(angle)):
             return -1
         angle = float(angle)
+        if int(angle) == 0:
+            msg_error = QMessageBox()
+            msg_error.setIcon(QMessageBox.Critical)
+            msg_error.setStandardButtons(QMessageBox.Close)
+            msg_error.setWindowTitle("Ошибка ввода данных")
+            msg_error.setText("Ошибка: модуль величины угла не может быть меньше 1.")
+            msg_error.exec_()
+            return -1
         self.spectrum_params = [r, angle]
+        return 0
+
+    def get_center(self):
+        x = self.ui.lineEdit_8.text()
+        y = self.ui.lineEdit_7.text()
+        if (self.valid_float(x)):
+            return -1
+        if (self.valid_float(y)):
+            return -1
+        x = float(x)
+        y = float(y)
+        self.center = [x, y]
         return 0
 
     def show_color_error(self):
