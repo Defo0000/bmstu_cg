@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1375</width>
+    <width>1225</width>
     <height>900</height>
    </rect>
   </property>
@@ -20,8 +20,8 @@
    <widget class="QPushButton" name="exit_btn">
     <property name="geometry">
      <rect>
-      <x>1039</x>
-      <y>800</y>
+      <x>889</x>
+      <y>820</y>
       <width>311</width>
       <height>41</height>
      </rect>
@@ -36,8 +36,8 @@
    <widget class="QPushButton" name="clear_btn">
     <property name="geometry">
      <rect>
-      <x>1040</x>
-      <y>750</y>
+      <x>890</x>
+      <y>770</y>
       <width>311</width>
       <height>41</height>
      </rect>
@@ -49,101 +49,11 @@
      <string>Очистить поле</string>
     </property>
    </widget>
-   <widget class="QLabel" name="label_4">
-    <property name="geometry">
-     <rect>
-      <x>1040</x>
-      <y>290</y>
-      <width>161</width>
-      <height>41</height>
-     </rect>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">background-color: rgb(255, 255, 255);
-color: rgb(0, 0, 0);</string>
-    </property>
-    <property name="text">
-     <string>  Радиус окр-ти:</string>
-    </property>
-   </widget>
-   <widget class="QLineEdit" name="r_lbl">
-    <property name="geometry">
-     <rect>
-      <x>1220</x>
-      <y>290</y>
-      <width>131</width>
-      <height>41</height>
-     </rect>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">background-color: rgb(255, 255, 255);</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_5">
-    <property name="geometry">
-     <rect>
-      <x>1040</x>
-      <y>340</y>
-      <width>161</width>
-      <height>41</height>
-     </rect>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">background-color: rgb(255, 255, 255);
-color: rgb(0, 0, 0);</string>
-    </property>
-    <property name="text">
-     <string>    Полуось а:</string>
-    </property>
-   </widget>
-   <widget class="QLineEdit" name="a_lbl">
-    <property name="geometry">
-     <rect>
-      <x>1220</x>
-      <y>340</y>
-      <width>131</width>
-      <height>41</height>
-     </rect>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">background-color: rgb(255, 255, 255);</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_6">
-    <property name="geometry">
-     <rect>
-      <x>1040</x>
-      <y>390</y>
-      <width>161</width>
-      <height>41</height>
-     </rect>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">background-color: rgb(255, 255, 255);
-color: rgb(0, 0, 0);</string>
-    </property>
-    <property name="text">
-     <string>    Полуось b:</string>
-    </property>
-   </widget>
-   <widget class="QLineEdit" name="b_lbl">
-    <property name="geometry">
-     <rect>
-      <x>1220</x>
-      <y>390</y>
-      <width>131</width>
-      <height>41</height>
-     </rect>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">background-color: rgb(255, 255, 255);</string>
-    </property>
-   </widget>
    <widget class="QLabel" name="label">
     <property name="geometry">
      <rect>
-      <x>1040</x>
-      <y>450</y>
+      <x>890</x>
+      <y>390</y>
       <width>311</width>
       <height>41</height>
      </rect>
@@ -159,10 +69,10 @@ color: rgb(0, 0, 0);</string>
    <widget class="QLineEdit" name="xc_lbl">
     <property name="geometry">
      <rect>
-      <x>1070</x>
-      <y>510</y>
+      <x>920</x>
+      <y>450</y>
       <width>121</width>
-      <height>41</height>
+      <height>31</height>
      </rect>
     </property>
     <property name="styleSheet">
@@ -172,10 +82,10 @@ color: rgb(0, 0, 0);</string>
    <widget class="QLineEdit" name="yc_lbl">
     <property name="geometry">
      <rect>
-      <x>1230</x>
-      <y>510</y>
+      <x>1080</x>
+      <y>450</y>
       <width>121</width>
-      <height>41</height>
+      <height>31</height>
      </rect>
     </property>
     <property name="styleSheet">
@@ -185,8 +95,8 @@ color: rgb(0, 0, 0);</string>
    <widget class="QLabel" name="label_3">
     <property name="geometry">
      <rect>
-      <x>1200</x>
-      <y>510</y>
+      <x>1050</x>
+      <y>440</y>
       <width>21</width>
       <height>41</height>
      </rect>
@@ -198,8 +108,8 @@ color: rgb(0, 0, 0);</string>
    <widget class="QLabel" name="label_2">
     <property name="geometry">
      <rect>
-      <x>1040</x>
-      <y>510</y>
+      <x>890</x>
+      <y>440</y>
       <width>21</width>
       <height>41</height>
      </rect>
@@ -211,7 +121,7 @@ color: rgb(0, 0, 0);</string>
    <widget class="QLabel" name="label_7">
     <property name="geometry">
      <rect>
-      <x>1170</x>
+      <x>1020</x>
       <y>20</y>
       <width>85</width>
       <height>22</height>
@@ -224,7 +134,7 @@ color: rgb(0, 0, 0);</string>
    <widget class="QLabel" name="label_8">
     <property name="geometry">
      <rect>
-      <x>1160</x>
+      <x>1010</x>
       <y>100</y>
       <width>121</width>
       <height>22</height>
@@ -237,7 +147,7 @@ color: rgb(0, 0, 0);</string>
    <widget class="QLabel" name="label_9">
     <property name="geometry">
      <rect>
-      <x>1180</x>
+      <x>1030</x>
       <y>180</y>
       <width>51</width>
       <height>22</height>
@@ -247,13 +157,74 @@ color: rgb(0, 0, 0);</string>
      <string>Цвет</string>
     </property>
    </widget>
+   <widget class="QPushButton" name="analysis">
+    <property name="geometry">
+     <rect>
+      <x>890</x>
+      <y>720</y>
+      <width>311</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(255, 255, 255);</string>
+    </property>
+    <property name="text">
+     <string>Сравнение алгоритмов</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_10">
+    <property name="geometry">
+     <rect>
+      <x>1010</x>
+      <y>540</y>
+      <width>71</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Спектр</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="spectrum_btn">
+    <property name="geometry">
+     <rect>
+      <x>890</x>
+      <y>670</y>
+      <width>311</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(255, 255, 255);</string>
+    </property>
+    <property name="text">
+     <string>Построить спектр</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="draw_btn">
+    <property name="geometry">
+     <rect>
+      <x>890</x>
+      <y>490</y>
+      <width>311</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(255, 255, 255);</string>
+    </property>
+    <property name="text">
+     <string>Построить окружность</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1375</width>
+     <width>1225</width>
      <height>27</height>
     </rect>
    </property>
