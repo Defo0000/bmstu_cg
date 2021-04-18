@@ -20,8 +20,8 @@
    <widget class="QPushButton" name="exit_btn">
     <property name="geometry">
      <rect>
-      <x>889</x>
-      <y>820</y>
+      <x>899</x>
+      <y>800</y>
       <width>311</width>
       <height>41</height>
      </rect>
@@ -36,8 +36,8 @@
    <widget class="QPushButton" name="clear_btn">
     <property name="geometry">
      <rect>
-      <x>890</x>
-      <y>770</y>
+      <x>900</x>
+      <y>750</y>
       <width>311</width>
       <height>41</height>
      </rect>
@@ -52,8 +52,8 @@
    <widget class="QLabel" name="label">
     <property name="geometry">
      <rect>
-      <x>890</x>
-      <y>390</y>
+      <x>900</x>
+      <y>40</y>
       <width>311</width>
       <height>41</height>
      </rect>
@@ -69,8 +69,8 @@ color: rgb(0, 0, 0);</string>
    <widget class="QLineEdit" name="xc_lbl">
     <property name="geometry">
      <rect>
-      <x>920</x>
-      <y>450</y>
+      <x>930</x>
+      <y>100</y>
       <width>121</width>
       <height>31</height>
      </rect>
@@ -82,8 +82,8 @@ color: rgb(0, 0, 0);</string>
    <widget class="QLineEdit" name="yc_lbl">
     <property name="geometry">
      <rect>
-      <x>1080</x>
-      <y>450</y>
+      <x>1090</x>
+      <y>100</y>
       <width>121</width>
       <height>31</height>
      </rect>
@@ -95,10 +95,10 @@ color: rgb(0, 0, 0);</string>
    <widget class="QLabel" name="label_3">
     <property name="geometry">
      <rect>
-      <x>1050</x>
-      <y>440</y>
+      <x>1060</x>
+      <y>100</y>
       <width>21</width>
-      <height>41</height>
+      <height>31</height>
      </rect>
     </property>
     <property name="text">
@@ -108,10 +108,10 @@ color: rgb(0, 0, 0);</string>
    <widget class="QLabel" name="label_2">
     <property name="geometry">
      <rect>
-      <x>890</x>
-      <y>440</y>
+      <x>900</x>
+      <y>100</y>
       <width>21</width>
-      <height>41</height>
+      <height>31</height>
      </rect>
     </property>
     <property name="text">
@@ -121,8 +121,8 @@ color: rgb(0, 0, 0);</string>
    <widget class="QLabel" name="label_7">
     <property name="geometry">
      <rect>
-      <x>1020</x>
-      <y>20</y>
+      <x>90</x>
+      <y>10</y>
       <width>85</width>
       <height>22</height>
      </rect>
@@ -134,8 +134,8 @@ color: rgb(0, 0, 0);</string>
    <widget class="QLabel" name="label_8">
     <property name="geometry">
      <rect>
-      <x>1010</x>
-      <y>100</y>
+      <x>360</x>
+      <y>10</y>
       <width>121</width>
       <height>22</height>
      </rect>
@@ -147,8 +147,8 @@ color: rgb(0, 0, 0);</string>
    <widget class="QLabel" name="label_9">
     <property name="geometry">
      <rect>
-      <x>1030</x>
-      <y>180</y>
+      <x>660</x>
+      <y>10</y>
       <width>51</width>
       <height>22</height>
      </rect>
@@ -160,8 +160,8 @@ color: rgb(0, 0, 0);</string>
    <widget class="QPushButton" name="analysis">
     <property name="geometry">
      <rect>
-      <x>890</x>
-      <y>720</y>
+      <x>900</x>
+      <y>700</y>
       <width>311</width>
       <height>41</height>
      </rect>
@@ -176,8 +176,8 @@ color: rgb(0, 0, 0);</string>
    <widget class="QLabel" name="label_10">
     <property name="geometry">
      <rect>
-      <x>1010</x>
-      <y>540</y>
+      <x>1020</x>
+      <y>360</y>
       <width>71</width>
       <height>22</height>
      </rect>
@@ -189,8 +189,8 @@ color: rgb(0, 0, 0);</string>
    <widget class="QPushButton" name="spectrum_btn">
     <property name="geometry">
      <rect>
-      <x>890</x>
-      <y>670</y>
+      <x>900</x>
+      <y>560</y>
       <width>311</width>
       <height>41</height>
      </rect>
@@ -205,8 +205,8 @@ color: rgb(0, 0, 0);</string>
    <widget class="QPushButton" name="draw_btn">
     <property name="geometry">
      <rect>
-      <x>890</x>
-      <y>490</y>
+      <x>900</x>
+      <y>310</y>
       <width>311</width>
       <height>41</height>
      </rect>

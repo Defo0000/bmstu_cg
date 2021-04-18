@@ -17,61 +17,84 @@ class mywindow(QtWidgets.QMainWindow):
         self.setWindowTitle("Лабораторная работа № 4")
         self.move(225, 50)
 
+        self.current_color = QColor(255, 255, 255)
+        self.algorithm = "Каноническое уравнение"
+        self.mode = "Окружность"
+
         self.create_scene()
 
         self.ui.exit_btn.clicked.connect(self.exit)
         self.ui.clear_btn.clicked.connect(self.clear)
+        self.ui.draw_btn.clicked.connect(self.draw)
+
+        self.ui.xc_lbl.setText("400")
+        self.ui.yc_lbl.setText("325")
 
         self.r_lbl = QtWidgets.QLabel(self)
         self.r_lbl.setText("  Радиус окр-ти:")
         self.r_lbl.setStyleSheet("background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)")
-        self.r_lbl.setGeometry(890, 270, 160, 30)
+        self.r_lbl.setGeometry(900, 190, 160, 30)
 
         self.enter_r = QtWidgets.QLineEdit(self)
         self.enter_r.setStyleSheet("background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)")
-        self.enter_r.setGeometry(1070, 270, 130, 30)
+        self.enter_r.setGeometry(1080, 190, 130, 30)
+        self.enter_r.setText("150")
 
         self.a_lbl = QtWidgets.QLabel(self)
         self.a_lbl.setText("  Полуось а:")
         self.a_lbl.setStyleSheet("background-color: rgb(52, 101, 164); color: rgb(136, 138, 133);")
-        self.a_lbl.setGeometry(890, 310, 160, 30)
+        self.a_lbl.setGeometry(900, 230, 160, 30)
 
         self.enter_a = QtWidgets.QLineEdit(self)
         self.enter_a.setStyleSheet("background-color: rgb(52, 101, 164); color: rgb(136, 138, 133);")
-        self.enter_a.setGeometry(1070, 310, 130, 30)
+        self.enter_a.setGeometry(1080, 230, 130, 30)
         self.enter_a.setDisabled(True)
 
         self.b_lbl = QtWidgets.QLabel(self)
         self.b_lbl.setText("  Полуось b:")
         self.b_lbl.setStyleSheet("background-color: rgb(52, 101, 164); color: rgb(136, 138, 133);")
-        self.b_lbl.setGeometry(890, 350, 160, 30)
+        self.b_lbl.setGeometry(900, 270, 160, 30)
 
         self.enter_b = QtWidgets.QLineEdit(self)
         self.enter_b.setStyleSheet("background-color: rgb(52, 101, 164); color: rgb(136, 138, 133);")
-        self.enter_b.setGeometry(1070, 350, 130, 30)
+        self.enter_b.setGeometry(1080, 270, 130, 30)
         self.enter_b.setDisabled(True)
 
-        self.begin_spectrum = QtWidgets.QLabel(self)
-        self.begin_spectrum.setText("Нач. р.:")
-        self.begin_spectrum.setStyleSheet("background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)")
-        self.begin_spectrum.setGeometry(890, 570, 80, 30)
+        self.spec_first_lbl = QtWidgets.QLabel(self)
+        self.spec_first_lbl.setText("    Нач. радиус:")
+        self.spec_first_lbl.setStyleSheet("background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)")
+        self.spec_first_lbl.setGeometry(900, 400, 165, 30)
 
-        self.enter_begin = QtWidgets.QLineEdit(self)
-        self.enter_begin.setStyleSheet("background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)")
-        self.enter_begin.setGeometry(980, 570, 70, 30)
-        self.enter_begin.setDisabled(False)
+        self.enter_spec_first = QtWidgets.QLineEdit(self)
+        self.enter_spec_first.setStyleSheet("background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)")
+        self.enter_spec_first.setGeometry(1080, 400, 130, 30)
 
-        self.end_spectrum = QtWidgets.QLabel(self)
-        self.end_spectrum.setText("Кон. р.:")
-        self.end_spectrum.setStyleSheet("background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)")
-        self.end_spectrum.setGeometry(1060, 570, 80, 30)
+        self.spec_sec_lbl = QtWidgets.QLabel(self)
+        self.spec_sec_lbl.setText("  Конеч. радиус:")
+        self.spec_sec_lbl.setStyleSheet("background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)")
+        self.spec_sec_lbl.setGeometry(900, 440, 165, 30)
+
+        self.enter_spec_sec = QtWidgets.QLineEdit(self)
+        self.enter_spec_sec.setStyleSheet("background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)")
+        self.enter_spec_sec.setGeometry(1080, 440, 130, 30)
+
+        self.spec_params = QtWidgets.QComboBox(self)
+        self.spec_params.addItem("Шаг")
+        self.spec_params.addItem("Кол-во окр-тей")
+        self.spec_params.setGeometry(900, 480, 165, 30)
+        self.spec_params.setStyleSheet("background-color: rgb(255, 255, 255); "
+                                "color: rgb(0, 0, 0)")
+
+        self.enter_spec_params = QtWidgets.QLineEdit(self)
+        self.enter_spec_params.setStyleSheet("background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)")
+        self.enter_spec_params.setGeometry(1080, 480, 130, 30)
 
         # Рисование спектра
-        self.mode = QtWidgets.QComboBox(self)
-        self.mode.addItem("Окружность")
-        self.mode.addItem("Эллипс")
-        self.mode.setGeometry(890, 50, 315, 40)
-        self.mode.setStyleSheet("background-color: rgb(255, 255, 255); "
+        self.modes = QtWidgets.QComboBox(self)
+        self.modes.addItem("Окружность")
+        self.modes.addItem("Эллипс")
+        self.modes.setGeometry(25, 40, 200, 40)
+        self.modes.setStyleSheet("background-color: rgb(255, 255, 255); "
                            "color: rgb(0, 0, 0)")
 
         # Выпадающий список алгоритмов
@@ -81,7 +104,7 @@ class mywindow(QtWidgets.QMainWindow):
         self.algorithms.addItem("Алгоритм Брезенхема")
         self.algorithms.addItem("Алгоритм средней точки")
         self.algorithms.addItem("Библиотечный алгоритм")
-        self.algorithms.setGeometry(890, 130, 315, 40)
+        self.algorithms.setGeometry(275, 40, 275, 40)
         self.algorithms.setStyleSheet("background-color: rgb(255, 255, 255); "
                                  "color: rgb(0, 0, 0)")
 
@@ -92,14 +115,145 @@ class mywindow(QtWidgets.QMainWindow):
         self.colors.addItem("Красный")
         self.colors.addItem("Зеленый")
         self.colors.addItem("Синий")
-        self.colors.setGeometry(890, 210, 315, 40)
+        self.colors.setGeometry(600, 40, 200, 40)
         self.colors.setStyleSheet("background-color: rgb(255, 255, 255); "
                              "color: rgb(0, 0, 0)")
 
-        self.mode.activated.connect(self.change_visible)
+        self.modes.activated.connect(self.change_visible)
+
+    def create_scene(self):
+        self.scene = QGraphicsScene()
+        graphicView = QGraphicsView(self.scene, self)
+        self.pen = QPen(Qt.white, 1)
+        self.scene.setSceneRect(0, 0, 800, 650)
+        graphicView.setGeometry(25, 100, 825, 750)
+        self.scene.setBackgroundBrush(QColor(255, 255, 255))
+
+
+    def draw(self):
+        self.algorithm = self.algorithms.currentText()
+        self.mode = self.modes.currentText()
+        self.current_color = self.convert_to_qcolor(self.colors.currentText())
+        if self.mode == "Окружность":
+            res = self.get_circle_params()
+            if res != -1:
+                radius, x_center, y_center = res
+                if self.algorithm == "Параметрическое уравнение":
+                    dots = self.parametric_circle(radius, x_center, y_center)
+                    self.draw_circle(dots)
+
+    def draw_spectrum(self):
+        self.algorithm = self.algorithms.currentText()
+        self.mode = self.modes.currentText()
+        self.current_color = self.convert_to_qcolor(self.colors.currentText())
+        if self.mode == "Окружность":
+            res = self.get_circle_spectrum_params()
+            if res != -1:
+                start, end, k = res
+                if self.algorithm == "Параметрическое уравнение":
+
+
+    def convert_to_qcolor(self, s):
+        if s == "Черный":
+            return QColor(255, 255, 255)
+        elif s== "Красный":
+            return QColor(255, 0, 0)
+        elif s == "Зеленый":
+            return QColor(0, 255, 0)
+        elif s == "Синий":
+            return QColor(0, 0, 255)
+
+    def draw_circle(self, dots):
+        self.pen.setColor(self.current_color)
+
+        for i in range(0, (len(dots) // 2) - 2, 2):
+            self.scene.addLine(dots[i], dots[i + 1], dots[i + 2], dots[i + 3])
+
+        self.scene.addLine(dots[0], dots[1], dots[-2], dots[-1])
+
+    def get_circle_params(self):
+        x_center = self.ui.xc_lbl.text()
+        if self.valid_float(x_center):
+            return -1
+        x_center = float(x_center)
+
+        y_center = self.ui.yc_lbl.text()
+        if self.valid_float(y_center):
+            return - 1
+        y_center = float(y_center)
+
+        radius = self.enter_r.text()
+        if self.valid_pos_float(radius):
+            return -1
+        radius = float(radius)
+
+        return radius, x_center, y_center
+
+    def get_circle_spectrum_params(self):
+        start = self.enter_spec_first.text()
+        if self.valid_pos_float(start):
+            return -1
+        start = float(start)
+
+        end = self.enter_spec_sec.text()
+        if self.valid_pos_float(end):
+            return -1
+        end = float(end)
+
+        k = self.enter_spec_params.text()
+        if self.valid_pos_float(k):
+            return -1
+        k = float(k)
+
+        return start, end, k
+
+
+    def valid_float(self, x):
+        msg_error = QMessageBox()
+        msg_error.setIcon(QMessageBox.Critical)
+        msg_error.setStandardButtons(QMessageBox.Close)
+        msg_error.setWindowTitle("Ошибка ввода данных")
+        try:
+            x = float(x)
+            return 0
+        except:
+            if x == "":
+                msg_error.setText("Ошибка: пустое поле ввода.")
+                msg_error.exec_()
+                return -1
+            else:
+                msg_error.setText("Ошибка: введено невещественное число.")
+                msg_error.exec_()
+                return -2
+
+    def valid_pos_float(self, x):
+        msg_error = QMessageBox()
+        msg_error.setIcon(QMessageBox.Critical)
+        msg_error.setStandardButtons(QMessageBox.Close)
+        msg_error.setWindowTitle("Ошибка ввода данных")
+        if (self.valid_float(x)):
+            return -1
+        x = float(x)
+        if x < 0:
+            msg_error.setText("Ошибка: необходимо ввести неотрицательное число.")
+            msg_error.exec_()
+
+    def parametric_circle(self, radius, x_center, y_center):
+
+        dots = []
+
+        step = round(1 / radius) + 1
+        for angle in range(0, 720, step):
+            dots.append(x_center + radius * cos(radians(angle)))
+            dots.append(y_center + radius * sin(radians(angle)))
+
+        return dots
+
+    def canonical_ellipse(self):
+        pass
 
     def change_visible(self):
-        if self.mode.currentText() == "Эллипс":
+        if self.modes.currentText() == "Эллипс":
             self.enter_a.setDisabled(False)
             self.enter_a.setStyleSheet("background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)")
             self.a_lbl.setStyleSheet("background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)")
@@ -110,6 +264,10 @@ class mywindow(QtWidgets.QMainWindow):
             self.enter_r.setStyleSheet("background-color: rgb(52, 101, 164); color: rgb(136, 138, 133);")
             self.r_lbl.setStyleSheet("background-color: rgb(52, 101, 164); color: rgb(136, 138, 133);")
             self.ui.draw_btn.setText("Построить эллипс")
+            self.spec_first_lbl.setText("  Нач. полуось а:")
+            self.spec_sec_lbl.setText("  Нач. полуось b:")
+            self.spec_params.removeItem(1)
+            self.mode = "ellipse"
         else:
             self.enter_a.setDisabled(True)
             self.enter_a.setStyleSheet("background-color: rgb(52, 101, 164); color: rgb(136, 138, 133);")
@@ -121,13 +279,9 @@ class mywindow(QtWidgets.QMainWindow):
             self.enter_r.setStyleSheet("background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)")
             self.r_lbl.setStyleSheet("background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)")
             self.ui.draw_btn.setText("Построить окружность")
-
-    def create_scene(self):
-        self.scene = QGraphicsScene()
-        graphicView = QGraphicsView(self.scene, self)
-        self.pen = QPen(Qt.white, 1)
-        graphicView.setGeometry(25, 25, 850, 850)
-        self.scene.setBackgroundBrush(QColor(255, 255, 255))
+            self.spec_first_lbl.setText("    Нач. радиус:")
+            self.spec_sec_lbl.setText("  Конеч. радиус:")
+            self.mode = "circle"
 
     def clear(self):
         self.scene.clear()
