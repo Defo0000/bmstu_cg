@@ -9,6 +9,11 @@ import numpy as np
 import time
 import matplotlib.pyplot as plt
 
+class Point:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
 class mywindow(QtWidgets.QMainWindow):
     def __init__(self):
         super(mywindow, self).__init__()
@@ -27,7 +32,7 @@ class mywindow(QtWidgets.QMainWindow):
         self.ui.clear_btn.clicked.connect(self.clear)
         self.ui.draw_btn.clicked.connect(self.draw)
 
-        self.ui.xc_lbl.setText("400")
+        self.ui.xc_lbl.setText("415")
         self.ui.yc_lbl.setText("300")
 
         self.r_lbl = QtWidgets.QLabel(self)
@@ -78,16 +83,23 @@ class mywindow(QtWidgets.QMainWindow):
         self.enter_spec_sec.setStyleSheet("background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)")
         self.enter_spec_sec.setGeometry(1080, 440, 130, 30)
 
-        self.spec_params = QtWidgets.QComboBox(self)
-        self.spec_params.addItem("Шаг")
-        self.spec_params.addItem("Кол-во окр-тей")
-        self.spec_params.setGeometry(900, 480, 165, 30)
-        self.spec_params.setStyleSheet("background-color: rgb(255, 255, 255); "
-                                "color: rgb(0, 0, 0)")
+        self.spec_step_lbl = QtWidgets.QLabel(self)
+        self.spec_step_lbl.setText("  Шаг изменения:")
+        self.spec_step_lbl.setStyleSheet("background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)")
+        self.spec_step_lbl.setGeometry(900, 480, 165, 30)
 
-        self.enter_spec_params = QtWidgets.QLineEdit(self)
-        self.enter_spec_params.setStyleSheet("background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)")
-        self.enter_spec_params.setGeometry(1080, 480, 130, 30)
+        self.enter_spec_step = QtWidgets.QLineEdit(self)
+        self.enter_spec_step.setStyleSheet("background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)")
+        self.enter_spec_step.setGeometry(1080, 480, 130, 30)
+
+        self.spec_amount_lbl = QtWidgets.QLabel(self)
+        self.spec_amount_lbl.setText("  Кол-во окр-тей:")
+        self.spec_amount_lbl.setStyleSheet("background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)")
+        self.spec_amount_lbl.setGeometry(900, 520, 165, 30)
+
+        self.enter_spec_amount = QtWidgets.QLineEdit(self)
+        self.enter_spec_amount.setStyleSheet("background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)")
+        self.enter_spec_amount.setGeometry(1080, 520, 130, 30)
 
         # Рисование спектра
         self.modes = QtWidgets.QComboBox(self)
@@ -124,9 +136,9 @@ class mywindow(QtWidgets.QMainWindow):
     def create_scene(self):
         self.scene = QGraphicsScene()
         graphicView = QGraphicsView(self.scene, self)
-        self.pen = QPen(Qt.red, 3)
-        self.scene.setSceneRect(0, 0, 800, 600)
-        graphicView.setGeometry(25, 100, 825, 700)
+        self.pen = QPen(Qt.red, 5)
+        self.scene.setSceneRect(0, 0, 830, 600)
+        graphicView.setGeometry(25, 100, 855, 700)
         self.scene.setBackgroundBrush(QColor(255, 255, 255))
 
     def draw(self):
@@ -170,47 +182,42 @@ class mywindow(QtWidgets.QMainWindow):
     def draw_circle(self, dots):
         self.pen.setColor(self.current_color)
 
-        for i in range(0, len(dots) - 2, 2):
-            self.scene.addLine(dots[i], dots[i + 1], dots[i + 2], dots[i + 3], self.pen)
+        for i in range(0, len(dots) - 1, 1):
+            self.scene.addLine(dots[i].x, dots[i].y, dots[i + 1].x, dots[i + 1].y, self.pen)
+
+    def canonical_circle(self, radius, x_center, y_center):
+        dots = []
+
+        for x in range(int(x_center), round(x_center + radius / sqrt(2)) + 1):
+            y = sqrt(radius * radius - (x - x_center) * (x - x_center)) + y_center
+            dots.append(Point(x, y))
+
+        dots = self.mirror(dots, x_center, y_center)
+
+        return dots
+
+    def canonical_ellipse(self):
+        pass
 
     def parametric_circle(self, radius, x_center, y_center):
 
         dots = []
 
         step = round(1 / radius) + 1
-        for angle in range(0, 720, step):
-            dots.append(x_center + radius * cos(radians(angle)))
-            dots.append(y_center + radius * sin(radians(angle)))
+        for angle in range(0, 45, step):
+            x = x_center + radius * cos(radians(angle))
+            y = y_center + radius * sin(radians(angle))
+            dots.append(Point(x, y))
+
+        dots = self.mirror(dots, x_center, y_center)
 
         return dots
 
-    def parametrical_ellipse(self):
-        pass
+    def parametrical_ellipse(self, a, b, x_center, y_center):
 
-    def canonical_circle(self, radius, x_center, y_center):
         dots = []
 
-        for x in range(int(x_center), int(x_center + radius) + 1):
-            y = sqrt(radius * radius - (x - x_center) * (x - x_center)) + y_center
-            dots.append(x)
-            dots.append(y)
-
-        mirror = []
-        n = len(dots)
-        for i in range(n - 1, 0, -2):
-            mirror.append(dots[i - 1])
-            mirror.append(2 * y_center - dots[i])
-        for i in range(0, n, 2):
-            mirror.append(2 * x_center - dots[i])
-            mirror.append(2 * y_center - dots[i + 1])
-        for i in range(n - 1, 0, -2):
-            mirror.append(2 * x_center - dots[i - 1])
-            mirror.append(dots[i])
-
-        return dots + mirror
-
-    def canonical_ellipse(self):
-        pass
+        return dots
 
     def brezenham_circle(self):
         pass
@@ -238,7 +245,7 @@ class mywindow(QtWidgets.QMainWindow):
             self.ui.draw_btn.setText("Построить эллипс")
             self.spec_first_lbl.setText("  Нач. полуось а:")
             self.spec_sec_lbl.setText("  Нач. полуось b:")
-            self.spec_params.removeItem(1)
+            self.spec_amount_lbl.setText(" Кол-во эллипсов:")
             self.mode = "ellipse"
         else:
             self.enter_a.setDisabled(True)
@@ -253,8 +260,8 @@ class mywindow(QtWidgets.QMainWindow):
             self.ui.draw_btn.setText("Построить окружность")
             self.spec_first_lbl.setText("    Нач. радиус:")
             self.spec_sec_lbl.setText("  Конеч. радиус:")
+            self.spec_amount_lbl.setText("  Кол-во окр-тей:")
             self.mode = "circle"
-
 
     def get_circle_params(self):
         x_center = self.ui.xc_lbl.text()
@@ -292,6 +299,43 @@ class mywindow(QtWidgets.QMainWindow):
 
         return start, end, k
 
+    def mirror(self, dots, x_center, y_center):
+
+        dots = self.mirror_bisector(dots, x_center, y_center)
+        dots = self.mirror_x_axis(dots, y_center)
+        dots = self.mirror_y_axis(dots, x_center)
+
+        return dots
+
+    def mirror_bisector(self, dots, x_center, y_center):
+        mirror_dots = []
+
+        for i in range(len(dots) - 1, 0, -1):
+            x = x_center + (dots[i].y - y_center)
+            y = y_center + (dots[i].x - x_center)
+            mirror_dots.append(Point(x, y))
+
+        return dots + mirror_dots
+
+    def mirror_x_axis(self, dots, y_center):
+        mirror_dots = []
+
+        for i in range(len(dots) - 1, 0, -1):
+            x = dots[i].x
+            y = 2 * y_center - dots[i].y
+            mirror_dots.append(Point(x, y))
+
+        return dots + mirror_dots
+
+    def mirror_y_axis(self, dots, x_center):
+        mirror_dots = []
+
+        for i in range(len(dots) - 1, 0, -1):
+            x = 2 * x_center - dots[i].x
+            y = dots[i].y
+            mirror_dots.append(Point(x, y))
+
+        return dots + mirror_dots
 
     def valid_float(self, x):
         msg_error = QMessageBox()
