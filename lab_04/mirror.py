@@ -7,6 +7,12 @@ def mirror_circle(dots, x_center, y_center):
 
     return dots
 
+def mirror_ellipse(dots, x_center, y_center):
+
+    dots = mirror_x_axis(dots, y_center)
+    dots = mirror_y_axis(dots, x_center)
+
+    return dots
 
 def mirror_bisect(dots, x_center, y_center):
     mirror_dots = []

@@ -1,18 +1,15 @@
 from PyQt5 import QtWidgets
-from PyQt5.QtGui import QPen, QBrush, QColor
-from PyQt5.QtWidgets import QGraphicsScene, QGraphicsView, QMessageBox, QButtonGroup
+from PyQt5.QtGui import QPen, QColor
+from PyQt5.QtWidgets import QGraphicsScene, QGraphicsView, QMessageBox
 from window import Ui_MainWindow
 from PyQt5.QtCore import Qt
 import sys
-from math import *
 import numpy as np
 import time
 import matplotlib.pyplot as plt
 
-class Point:
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
+from canonical import *
+from parametric import *
 
 class mywindow(QtWidgets.QMainWindow):
     def __init__(self):
@@ -30,7 +27,8 @@ class mywindow(QtWidgets.QMainWindow):
 
         self.ui.exit_btn.clicked.connect(self.exit)
         self.ui.clear_btn.clicked.connect(self.clear)
-        self.ui.draw_btn.clicked.connect(self.draw)
+        self.ui.draw_btn.clicked.connect(self.figure)
+        self.ui.spectrum_btn.clicked.connect(self.spectrum)
 
         self.ui.xc_lbl.setText("415")
         self.ui.yc_lbl.setText("300")
@@ -54,6 +52,7 @@ class mywindow(QtWidgets.QMainWindow):
         self.enter_a.setStyleSheet("background-color: rgb(52, 101, 164); color: rgb(136, 138, 133);")
         self.enter_a.setGeometry(1080, 230, 130, 30)
         self.enter_a.setDisabled(True)
+        self.enter_a.setText("200")
 
         self.b_lbl = QtWidgets.QLabel(self)
         self.b_lbl.setText("  Полуось b:")
@@ -64,6 +63,7 @@ class mywindow(QtWidgets.QMainWindow):
         self.enter_b.setStyleSheet("background-color: rgb(52, 101, 164); color: rgb(136, 138, 133);")
         self.enter_b.setGeometry(1080, 270, 130, 30)
         self.enter_b.setDisabled(True)
+        self.enter_b.setText("100")
 
         self.spec_first_lbl = QtWidgets.QLabel(self)
         self.spec_first_lbl.setText("    Нач. радиус:")
@@ -136,88 +136,92 @@ class mywindow(QtWidgets.QMainWindow):
     def create_scene(self):
         self.scene = QGraphicsScene()
         graphicView = QGraphicsView(self.scene, self)
-        self.pen = QPen(Qt.red, 5)
+        self.pen = QPen(Qt.red, 3)
         self.scene.setSceneRect(0, 0, 830, 600)
         graphicView.setGeometry(25, 100, 855, 700)
         self.scene.setBackgroundBrush(QColor(255, 255, 255))
 
-    def draw(self):
+    def figure(self):
         self.algorithm = self.algorithms.currentText()
         self.mode = self.modes.currentText()
         self.current_color = self.convert_to_qcolor(self.colors.currentText())
+        self.pen.setColor(self.current_color)
+
         if self.mode == "Окружность":
             res = self.get_circle_params()
             if res != -1:
                 radius, x_center, y_center = res
-                if self.algorithm == "Каноническое уравнение":
-                    dots = self.canonical_circle(radius, x_center, y_center)
-                    self.draw_circle(dots)
-                if self.algorithm == "Параметрическое уравнение":
-                    dots = self.parametric_circle(radius, x_center, y_center)
-                    self.draw_circle(dots)
 
-    def draw_spectrum(self):
+                if self.algorithm == "Каноническое уравнение":
+                    dots = canonical_circle(radius, x_center, y_center)
+                    self.draw_figure(dots)
+
+                if self.algorithm == "Параметрическое уравнение":
+                    dots = parametric_circle(radius, x_center, y_center)
+                    self.draw_figure(dots)
+
+                if self.algorithm == "Библиотечный алгоритм":
+                    self.scene.addEllipse(x_center - radius, y_center - radius,
+                                          2 * radius, 2 * radius, self.pen)
+        else:
+            res = self.get_ellipse_params()
+            if res != -1:
+                a, b, x_center, y_center = res
+
+                if self.algorithm == "Каноническое уравнение":
+                    dots = canonical_ellipse(a, b, x_center, y_center)
+                    self.draw_figure(dots)
+
+                if self.algorithm == "Параметрическое уравнение":
+                    dots = parametric_ellipse(a, b, x_center, y_center)
+                    self.draw_figure(dots)
+
+                if self.algorithm == "Библиотечный алгоритм":
+                    self.scene.addEllipse(x_center - a, y_center - b,
+                                          2 * a, 2 * b, self.pen)
+
+    def spectrum(self):
         self.algorithm = self.algorithms.currentText()
         self.mode = self.modes.currentText()
         self.current_color = self.convert_to_qcolor(self.colors.currentText())
+        self.pen.setColor(self.current_color)
+
         if self.mode == "Окружность":
             res = self.get_circle_spectrum_params()
             if res != -1:
                 start, end, k = res
                 if self.algorithm == "Параметрическое уравнение":
                     pass
-
-    def convert_to_qcolor(self, s):
-        if s == "Черный":
-            return QColor(0, 0, 0)
-        elif s == "Красный":
-            return QColor(255, 0, 0)
-        elif s == "Зеленый":
-            return QColor(0, 255, 0)
-        elif s == "Синий":
-            return QColor(0, 0, 255)
         else:
-            return QColor(255, 255, 255)
+            spectrum_params = self.get_ellipse_spectrum_params()
+            if spectrum_params != -1:
+                self.draw_ellipse_spectrum(*spectrum_params)
 
-    def draw_circle(self, dots):
-        self.pen.setColor(self.current_color)
-
+    def draw_figure(self, dots):
         for i in range(0, len(dots) - 1, 1):
             self.scene.addLine(dots[i].x, dots[i].y, dots[i + 1].x, dots[i + 1].y, self.pen)
 
-    def canonical_circle(self, radius, x_center, y_center):
-        dots = []
+    def draw_ellipse_spectrum(self, a, b, x_center, y_center, step, amount):
+        if self.algorithm == "Каноническое уравнение":
+            for _ in range(amount):
+                dots = canonical_ellipse(a, b, x_center, y_center)
+                self.draw_figure(dots)
+                a += step
+                b += step
 
-        for x in range(int(x_center), round(x_center + radius / sqrt(2)) + 1):
-            y = sqrt(radius * radius - (x - x_center) * (x - x_center)) + y_center
-            dots.append(Point(x, y))
+        if self.algorithm == "Параметрическое уравнение":
+            for _ in range(amount):
+                dots = parametric_ellipse(a, b, x_center, y_center)
+                self.draw_figure(dots)
+                a += step
+                b += step
 
-        dots = self.mirror(dots, x_center, y_center)
-
-        return dots
-
-    def canonical_ellipse(self):
-        pass
-
-    def parametric_circle(self, radius, x_center, y_center):
-
-        dots = []
-
-        step = round(1 / radius) + 1
-        for angle in range(0, 45, step):
-            x = x_center + radius * cos(radians(angle))
-            y = y_center + radius * sin(radians(angle))
-            dots.append(Point(x, y))
-
-        dots = self.mirror(dots, x_center, y_center)
-
-        return dots
-
-    def parametrical_ellipse(self, a, b, x_center, y_center):
-
-        dots = []
-
-        return dots
+        if self.algorithm == "Библиотечный алгоритм":
+            for _ in range(amount):
+                self.scene.addEllipse(x_center - a, y_center - b,
+                                      2 * a, 2 * b, self.pen)
+                a += step
+                b += step
 
     def brezenham_circle(self):
         pass
@@ -242,10 +246,16 @@ class mywindow(QtWidgets.QMainWindow):
             self.enter_r.setDisabled(True)
             self.enter_r.setStyleSheet("background-color: rgb(52, 101, 164); color: rgb(136, 138, 133);")
             self.r_lbl.setStyleSheet("background-color: rgb(52, 101, 164); color: rgb(136, 138, 133);")
+
             self.ui.draw_btn.setText("Построить эллипс")
             self.spec_first_lbl.setText("  Нач. полуось а:")
             self.spec_sec_lbl.setText("  Нач. полуось b:")
             self.spec_amount_lbl.setText(" Кол-во эллипсов:")
+
+            self.enter_spec_first.setText("80")
+            self.enter_spec_sec.setText("10")
+            self.enter_spec_step.setText("20")
+            self.enter_spec_amount.setText("10")
             self.mode = "ellipse"
         else:
             self.enter_a.setDisabled(True)
@@ -281,6 +291,29 @@ class mywindow(QtWidgets.QMainWindow):
 
         return radius, x_center, y_center
 
+    def get_ellipse_params(self):
+        x_center = self.ui.xc_lbl.text()
+        if self.valid_float(x_center):
+            return -1
+        x_center = float(x_center)
+
+        y_center = self.ui.yc_lbl.text()
+        if self.valid_float(y_center):
+            return - 1
+        y_center = float(y_center)
+
+        a = self.enter_a.text()
+        if self.valid_pos_float(a):
+            return -1
+        a = float(a)
+
+        b = self.enter_b.text()
+        if self.valid_pos_float(b):
+            return -1
+        b = float(b)
+
+        return a, b, x_center, y_center
+
     def get_circle_spectrum_params(self):
         start = self.enter_spec_first.text()
         if self.valid_pos_float(start):
@@ -299,43 +332,50 @@ class mywindow(QtWidgets.QMainWindow):
 
         return start, end, k
 
-    def mirror(self, dots, x_center, y_center):
+    def get_ellipse_spectrum_params(self):
+        x_center = self.ui.xc_lbl.text()
+        if self.valid_float(x_center):
+            return -1
+        x_center = float(x_center)
 
-        dots = self.mirror_bisector(dots, x_center, y_center)
-        dots = self.mirror_x_axis(dots, y_center)
-        dots = self.mirror_y_axis(dots, x_center)
+        y_center = self.ui.yc_lbl.text()
+        if self.valid_float(y_center):
+            return - 1
+        y_center = float(y_center)
 
-        return dots
+        a = self.enter_spec_first.text()
+        if self.valid_pos_float(a):
+            return -1
+        a = float(a)
 
-    def mirror_bisector(self, dots, x_center, y_center):
-        mirror_dots = []
+        b = self.enter_spec_sec.text()
+        if self.valid_pos_float(b):
+            return -1
+        b = float(b)
 
-        for i in range(len(dots) - 1, 0, -1):
-            x = x_center + (dots[i].y - y_center)
-            y = y_center + (dots[i].x - x_center)
-            mirror_dots.append(Point(x, y))
+        step = self.enter_spec_step.text()
+        if self.valid_float(step):
+            return -1
+        step = float(step)
 
-        return dots + mirror_dots
+        amount = self.enter_spec_amount.text()
+        if self.valid_pos_int(amount):
+            return -1
+        amount = int(amount)
 
-    def mirror_x_axis(self, dots, y_center):
-        mirror_dots = []
+        return a, b, x_center, y_center, step, amount
 
-        for i in range(len(dots) - 1, 0, -1):
-            x = dots[i].x
-            y = 2 * y_center - dots[i].y
-            mirror_dots.append(Point(x, y))
-
-        return dots + mirror_dots
-
-    def mirror_y_axis(self, dots, x_center):
-        mirror_dots = []
-
-        for i in range(len(dots) - 1, 0, -1):
-            x = 2 * x_center - dots[i].x
-            y = dots[i].y
-            mirror_dots.append(Point(x, y))
-
-        return dots + mirror_dots
+    def convert_to_qcolor(self, s):
+        if s == "Черный":
+            return QColor(0, 0, 0)
+        if s == "Красный":
+            return QColor(255, 0, 0)
+        if s == "Зеленый":
+            return QColor(0, 255, 0)
+        if s == "Синий":
+            return QColor(0, 0, 255)
+        if s == "Белый(цвет фона)":
+            return QColor(255, 255, 255)
 
     def valid_float(self, x):
         msg_error = QMessageBox()
@@ -348,6 +388,28 @@ class mywindow(QtWidgets.QMainWindow):
         except:
             if x == "":
                 msg_error.setText("Ошибка: пустое поле ввода.")
+                msg_error.exec_()
+                return -1
+            else:
+                msg_error.setText("Ошибка: введено невещественное число.")
+                msg_error.exec_()
+                return -2
+
+    def valid_pos_int(self, x):
+        msg_error = QMessageBox()
+        msg_error.setIcon(QMessageBox.Critical)
+        msg_error.setStandardButtons(QMessageBox.Close)
+        msg_error.setWindowTitle("Ошибка ввода данных")
+        try:
+            x = int(x)
+            return 0
+        except:
+            if x == "":
+                msg_error.setText("Ошибка: пустое поле ввода.")
+                msg_error.exec_()
+                return -1
+            elif x <= 0:
+                msg_error.setText("Ошибка: количество не может быть неположительным.")
                 msg_error.exec_()
                 return -1
             else:
