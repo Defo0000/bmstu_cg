@@ -1,5 +1,5 @@
 from PyQt5 import QtWidgets
-from PyQt5.QtGui import QPen, QColor
+from PyQt5.QtGui import QPen, QBrush, QColor
 from PyQt5.QtWidgets import QGraphicsScene, QGraphicsView, QMessageBox, QButtonGroup
 from window import Ui_MainWindow
 from PyQt5.QtCore import Qt
@@ -28,7 +28,7 @@ class mywindow(QtWidgets.QMainWindow):
         self.ui.draw_btn.clicked.connect(self.draw)
 
         self.ui.xc_lbl.setText("400")
-        self.ui.yc_lbl.setText("325")
+        self.ui.yc_lbl.setText("300")
 
         self.r_lbl = QtWidgets.QLabel(self)
         self.r_lbl.setText("  Радиус окр-ти:")
@@ -104,7 +104,7 @@ class mywindow(QtWidgets.QMainWindow):
         self.algorithms.addItem("Алгоритм Брезенхема")
         self.algorithms.addItem("Алгоритм средней точки")
         self.algorithms.addItem("Библиотечный алгоритм")
-        self.algorithms.setGeometry(275, 40, 275, 40)
+        self.algorithms.setGeometry(275, 40, 290, 40)
         self.algorithms.setStyleSheet("background-color: rgb(255, 255, 255); "
                                  "color: rgb(0, 0, 0)")
 
@@ -115,7 +115,7 @@ class mywindow(QtWidgets.QMainWindow):
         self.colors.addItem("Красный")
         self.colors.addItem("Зеленый")
         self.colors.addItem("Синий")
-        self.colors.setGeometry(600, 40, 200, 40)
+        self.colors.setGeometry(615, 40, 200, 40)
         self.colors.setStyleSheet("background-color: rgb(255, 255, 255); "
                              "color: rgb(0, 0, 0)")
 
@@ -124,11 +124,10 @@ class mywindow(QtWidgets.QMainWindow):
     def create_scene(self):
         self.scene = QGraphicsScene()
         graphicView = QGraphicsView(self.scene, self)
-        self.pen = QPen(Qt.white, 1)
-        self.scene.setSceneRect(0, 0, 800, 650)
-        graphicView.setGeometry(25, 100, 825, 750)
+        self.pen = QPen(Qt.red, 3)
+        self.scene.setSceneRect(0, 0, 800, 600)
+        graphicView.setGeometry(25, 100, 825, 700)
         self.scene.setBackgroundBrush(QColor(255, 255, 255))
-
 
     def draw(self):
         self.algorithm = self.algorithms.currentText()
@@ -138,6 +137,9 @@ class mywindow(QtWidgets.QMainWindow):
             res = self.get_circle_params()
             if res != -1:
                 radius, x_center, y_center = res
+                if self.algorithm == "Каноническое уравнение":
+                    dots = self.canonical_circle(radius, x_center, y_center)
+                    self.draw_circle(dots)
                 if self.algorithm == "Параметрическое уравнение":
                     dots = self.parametric_circle(radius, x_center, y_center)
                     self.draw_circle(dots)
@@ -151,25 +153,108 @@ class mywindow(QtWidgets.QMainWindow):
             if res != -1:
                 start, end, k = res
                 if self.algorithm == "Параметрическое уравнение":
-
+                    pass
 
     def convert_to_qcolor(self, s):
         if s == "Черный":
-            return QColor(255, 255, 255)
-        elif s== "Красный":
+            return QColor(0, 0, 0)
+        elif s == "Красный":
             return QColor(255, 0, 0)
         elif s == "Зеленый":
             return QColor(0, 255, 0)
         elif s == "Синий":
             return QColor(0, 0, 255)
+        else:
+            return QColor(255, 255, 255)
 
     def draw_circle(self, dots):
         self.pen.setColor(self.current_color)
 
-        for i in range(0, (len(dots) // 2) - 2, 2):
-            self.scene.addLine(dots[i], dots[i + 1], dots[i + 2], dots[i + 3])
+        for i in range(0, len(dots) - 2, 2):
+            self.scene.addLine(dots[i], dots[i + 1], dots[i + 2], dots[i + 3], self.pen)
 
-        self.scene.addLine(dots[0], dots[1], dots[-2], dots[-1])
+    def parametric_circle(self, radius, x_center, y_center):
+
+        dots = []
+
+        step = round(1 / radius) + 1
+        for angle in range(0, 720, step):
+            dots.append(x_center + radius * cos(radians(angle)))
+            dots.append(y_center + radius * sin(radians(angle)))
+
+        return dots
+
+    def parametrical_ellipse(self):
+        pass
+
+    def canonical_circle(self, radius, x_center, y_center):
+        dots = []
+
+        for x in range(int(x_center), int(x_center + radius) + 1):
+            y = sqrt(radius * radius - (x - x_center) * (x - x_center)) + y_center
+            dots.append(x)
+            dots.append(y)
+
+        mirror = []
+        n = len(dots)
+        for i in range(n - 1, 0, -2):
+            mirror.append(dots[i - 1])
+            mirror.append(2 * y_center - dots[i])
+        for i in range(0, n, 2):
+            mirror.append(2 * x_center - dots[i])
+            mirror.append(2 * y_center - dots[i + 1])
+        for i in range(n - 1, 0, -2):
+            mirror.append(2 * x_center - dots[i - 1])
+            mirror.append(dots[i])
+
+        return dots + mirror
+
+    def canonical_ellipse(self):
+        pass
+
+    def brezenham_circle(self):
+        pass
+
+    def brezenham_ellipse(self):
+        pass
+
+    def middle_point_circle(self):
+        pass
+
+    def middle_point_ellipse(self):
+        pass
+
+    def change_visible(self):
+        if self.modes.currentText() == "Эллипс":
+            self.enter_a.setDisabled(False)
+            self.enter_a.setStyleSheet("background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)")
+            self.a_lbl.setStyleSheet("background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)")
+            self.enter_b.setDisabled(False)
+            self.enter_b.setStyleSheet("background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)")
+            self.b_lbl.setStyleSheet("background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)")
+            self.enter_r.setDisabled(True)
+            self.enter_r.setStyleSheet("background-color: rgb(52, 101, 164); color: rgb(136, 138, 133);")
+            self.r_lbl.setStyleSheet("background-color: rgb(52, 101, 164); color: rgb(136, 138, 133);")
+            self.ui.draw_btn.setText("Построить эллипс")
+            self.spec_first_lbl.setText("  Нач. полуось а:")
+            self.spec_sec_lbl.setText("  Нач. полуось b:")
+            self.spec_params.removeItem(1)
+            self.mode = "ellipse"
+        else:
+            self.enter_a.setDisabled(True)
+            self.enter_a.setStyleSheet("background-color: rgb(52, 101, 164); color: rgb(136, 138, 133);")
+            self.a_lbl.setStyleSheet("background-color: rgb(52, 101, 164); color: rgb(136, 138, 133);")
+            self.enter_b.setDisabled(True)
+            self.enter_b.setStyleSheet("background-color: rgb(52, 101, 164); color: rgb(136, 138, 133);")
+            self.b_lbl.setStyleSheet("background-color: rgb(52, 101, 164); color: rgb(136, 138, 133);")
+            self.enter_r.setDisabled(False)
+            self.enter_r.setStyleSheet("background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)")
+            self.r_lbl.setStyleSheet("background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)")
+            self.ui.draw_btn.setText("Построить окружность")
+            self.spec_first_lbl.setText("    Нач. радиус:")
+            self.spec_sec_lbl.setText("  Конеч. радиус:")
+            self.mode = "circle"
+
 
     def get_circle_params(self):
         x_center = self.ui.xc_lbl.text()
@@ -237,51 +322,6 @@ class mywindow(QtWidgets.QMainWindow):
         if x < 0:
             msg_error.setText("Ошибка: необходимо ввести неотрицательное число.")
             msg_error.exec_()
-
-    def parametric_circle(self, radius, x_center, y_center):
-
-        dots = []
-
-        step = round(1 / radius) + 1
-        for angle in range(0, 720, step):
-            dots.append(x_center + radius * cos(radians(angle)))
-            dots.append(y_center + radius * sin(radians(angle)))
-
-        return dots
-
-    def canonical_ellipse(self):
-        pass
-
-    def change_visible(self):
-        if self.modes.currentText() == "Эллипс":
-            self.enter_a.setDisabled(False)
-            self.enter_a.setStyleSheet("background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)")
-            self.a_lbl.setStyleSheet("background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)")
-            self.enter_b.setDisabled(False)
-            self.enter_b.setStyleSheet("background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)")
-            self.b_lbl.setStyleSheet("background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)")
-            self.enter_r.setDisabled(True)
-            self.enter_r.setStyleSheet("background-color: rgb(52, 101, 164); color: rgb(136, 138, 133);")
-            self.r_lbl.setStyleSheet("background-color: rgb(52, 101, 164); color: rgb(136, 138, 133);")
-            self.ui.draw_btn.setText("Построить эллипс")
-            self.spec_first_lbl.setText("  Нач. полуось а:")
-            self.spec_sec_lbl.setText("  Нач. полуось b:")
-            self.spec_params.removeItem(1)
-            self.mode = "ellipse"
-        else:
-            self.enter_a.setDisabled(True)
-            self.enter_a.setStyleSheet("background-color: rgb(52, 101, 164); color: rgb(136, 138, 133);")
-            self.a_lbl.setStyleSheet("background-color: rgb(52, 101, 164); color: rgb(136, 138, 133);")
-            self.enter_b.setDisabled(True)
-            self.enter_b.setStyleSheet("background-color: rgb(52, 101, 164); color: rgb(136, 138, 133);")
-            self.b_lbl.setStyleSheet("background-color: rgb(52, 101, 164); color: rgb(136, 138, 133);")
-            self.enter_r.setDisabled(False)
-            self.enter_r.setStyleSheet("background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)")
-            self.r_lbl.setStyleSheet("background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)")
-            self.ui.draw_btn.setText("Построить окружность")
-            self.spec_first_lbl.setText("    Нач. радиус:")
-            self.spec_sec_lbl.setText("  Конеч. радиус:")
-            self.mode = "circle"
 
     def clear(self):
         self.scene.clear()
