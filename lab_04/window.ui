@@ -21,7 +21,7 @@
     <property name="geometry">
      <rect>
       <x>899</x>
-      <y>740</y>
+      <y>750</y>
       <width>311</width>
       <height>41</height>
      </rect>
@@ -37,7 +37,7 @@
     <property name="geometry">
      <rect>
       <x>900</x>
-      <y>680</y>
+      <y>690</y>
       <width>311</width>
       <height>41</height>
      </rect>
@@ -157,13 +157,13 @@ color: rgb(0, 0, 0);</string>
      <string>Цвет</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="analysis">
+   <widget class="QPushButton" name="analysis_btn">
     <property name="geometry">
      <rect>
       <x>900</x>
       <y>630</y>
       <width>311</width>
-      <height>41</height>
+      <height>51</height>
      </rect>
     </property>
     <property name="styleSheet">

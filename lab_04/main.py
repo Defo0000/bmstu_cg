@@ -5,6 +5,7 @@ from window import Ui_MainWindow
 from PyQt5.QtCore import Qt
 import sys
 import numpy as np
+
 import time
 import matplotlib.pyplot as plt
 
@@ -25,12 +26,15 @@ class mywindow(QtWidgets.QMainWindow):
         self.algorithm = "Каноническое уравнение"
         self.mode = "Окружность"
 
+        self.ui.analysis_btn.setText("Сравнение алгоритмов\n для окружностей")
+
         self.create_scene()
 
         self.ui.exit_btn.clicked.connect(self.exit)
         self.ui.clear_btn.clicked.connect(self.clear)
         self.ui.draw_btn.clicked.connect(self.figure)
         self.ui.spectrum_btn.clicked.connect(self.spectrum)
+        self.ui.analysis_btn.clicked.connect(self.analysis)
 
         self.ui.xc_lbl.setText("415")
         self.ui.yc_lbl.setText("300")
@@ -143,7 +147,7 @@ class mywindow(QtWidgets.QMainWindow):
     def create_scene(self):
         self.scene = QGraphicsScene()
         graphicView = QGraphicsView(self.scene, self)
-        self.pen = QPen(Qt.red, 3)
+        self.pen = QPen(Qt.white, 2)
         self.scene.setSceneRect(0, 0, 830, 600)
         graphicView.setGeometry(25, 100, 855, 700)
         self.scene.setBackgroundBrush(QColor(255, 255, 255))
@@ -171,6 +175,10 @@ class mywindow(QtWidgets.QMainWindow):
                     dots = brezenham_circle(radius, x_center, y_center)
                     self.draw_figure(dots)
 
+                if self.algorithm == "Алгоритм средней точки":
+                    dots = middle_point_circle(radius, x_center, y_center)
+                    self.draw_figure(dots)
+
                 if self.algorithm == "Библиотечный алгоритм":
                     self.scene.addEllipse(x_center - radius, y_center - radius,
                                           2 * radius, 2 * radius, self.pen)
@@ -187,13 +195,13 @@ class mywindow(QtWidgets.QMainWindow):
                     dots = parametric_ellipse(a, b, x_center, y_center)
                     self.draw_figure(dots)
 
+                if self.algorithm == "Алгоритм средней точки":
+                    dots = middle_point_ellipse(a, b, x_center, y_center)
+                    self.draw_figure(dots)
+
                 if self.algorithm == "Библиотечный алгоритм":
                     self.scene.addEllipse(x_center - a, y_center - b,
                                           2 * a, 2 * b, self.pen)
-
-                if self.algorithm == "Алгоритм Брезенхема":
-                    dots = brezenham_ellipse(a, b, x_center, y_center)
-                    self.draw_figure(dots)
 
     def spectrum(self):
         self.algorithm = self.algorithms.currentText()
@@ -251,6 +259,42 @@ class mywindow(QtWidgets.QMainWindow):
                     dots = parametric_circle(radius, x_center, y_center)
                     self.draw_figure(dots)
 
+        if self.algorithm == "Алгоритм Брезенхема":
+            if mood == "SES":
+                for radius in np.arange(k1, k2, k3):
+                    dots = brezenham_circle(radius, x_center, y_center)
+                    self.draw_figure(dots)
+
+            if mood == "SEA":
+                step = (k2 - k1) / k3
+                for radius in np.arange(k1, k2, step):
+                    dots = brezenham_circle(radius, x_center, y_center)
+                    self.draw_figure(dots)
+
+            if mood == "SSA":
+                end = k1 + k2 * k3
+                for radius in np.arange(k1, end, k2):
+                    dots = brezenham_circle(radius, x_center, y_center)
+                    self.draw_figure(dots)
+
+        if self.algorithm == "Алгоритм средней точки":
+            if mood == "SES":
+                for radius in np.arange(k1, k2, k3):
+                    dots = middle_point_circle(radius, x_center, y_center)
+                    self.draw_figure(dots)
+
+            if mood == "SEA":
+                step = (k2 - k1) / k3
+                for radius in np.arange(k1, k2, step):
+                    dots = middle_point_circle(radius, x_center, y_center)
+                    self.draw_figure(dots)
+
+            if mood == "SSA":
+                end = k1 + k2 * k3
+                for radius in np.arange(k1, end, k2):
+                    dots = middle_point_circle(radius, x_center, y_center)
+                    self.draw_figure(dots)
+
         if self.algorithm == "Библиотечный алгоритм":
             if mood == "SES":
                 for radius in np.arange(k1, k2, k3):
@@ -269,23 +313,6 @@ class mywindow(QtWidgets.QMainWindow):
                     self.scene.addEllipse(x_center - radius, y_center - radius,
                                           2 * radius, 2 * radius, self.pen)
 
-        if self.algorithm == "Алгоритм Брезенхема":
-            if mood == "SES":
-                for radius in np.arange(k1, k2, k3):
-                    dots = brezenham_circle(radius, x_center, y_center)
-                    self.draw_figure(dots)
-
-            if mood == "SEA":
-                step = (k2 - k1) / k3
-                for radius in np.arange(k1, k2, step):
-                    dots = brezenham_circle(radius, x_center, y_center)
-                    self.draw_figure(dots)
-
-            if mood == "SSA":
-                end = k1 + k2 * k3
-                for radius in np.arange(k1, end, k2):
-                    dots = brezenham_circle(radius, x_center, y_center)
-                    self.draw_figure(dots)
 
     def draw_ellipse_spectrum(self, a, b, x_center, y_center, step, amount):
         if self.algorithm == "Каноническое уравнение":
@@ -305,6 +332,13 @@ class mywindow(QtWidgets.QMainWindow):
         if self.algorithm == "Алгоритм Брезенхема":
             for _ in range(amount):
                 dots = brezenham_ellipse(a, b, x_center, y_center)
+                self.draw_figure(dots)
+                a += step
+                b += step
+
+        if self.algorithm == "Алгоритм средней точки":
+            for _ in range(amount):
+                dots = middle_point_ellipse(a, b, x_center, y_center)
                 self.draw_figure(dots)
                 a += step
                 b += step
@@ -337,6 +371,9 @@ class mywindow(QtWidgets.QMainWindow):
             self.enter_spec_sec.setText("10")
             self.enter_spec_step.setText("20")
             self.enter_spec_amount.setText("10")
+
+            self.ui.analysis_btn.setText("Сравнение алгоритмов\n для эллипсов")
+
             self.mode = "ellipse"
         else:
             self.enter_a.setDisabled(True)
@@ -357,6 +394,9 @@ class mywindow(QtWidgets.QMainWindow):
             self.enter_spec_sec.setText("250")
             self.enter_spec_step.setText("20")
             self.enter_spec_amount.setText("")
+
+            self.ui.analysis_btn.setText("Сравнение алгоритмов\n для окружностей")
+
             self.mode = "circle"
 
     def get_circle_params(self):
@@ -563,6 +603,82 @@ class mywindow(QtWidgets.QMainWindow):
                 msg_error.setText("Ошибка: необходимо ввести неотрицательное число.")
                 msg_error.exec_()
             return -3
+
+    def analysis(self):
+        c_time = []
+        p_time = []
+        b_time = []
+        m_time = []
+        l_time = []
+
+        if self.mode == "Окружность":
+
+            for radius in range(50, 1000, 50):
+                temp = 0
+                for _ in range(100):
+                    start = time.time()
+                    canonical_circle(radius, 0, 0)
+                    end = time.time()
+                    temp += end - start
+
+                c_time.append(temp / 100)
+
+            for radius in range(50, 1000, 50):
+                temp = 0
+                for _ in range(100):
+                    start = time.time()
+                    parametric_circle(radius, 0, 0)
+                    end = time.time()
+                    temp += end - start
+
+                p_time.append(temp / 100)
+
+            for radius in range(50, 1000, 50):
+                temp = 0
+                for _ in range(100):
+                    start = time.time()
+                    brezenham_circle(radius, 0, 0)
+                    end = time.time()
+                    temp += end - start
+
+                b_time.append(temp / 100)
+
+            for radius in range(50, 1000, 50):
+                temp = 0
+                for _ in range(100):
+                    start = time.time()
+                    middle_point_circle(radius, 0, 0)
+                    end = time.time()
+                    temp += end - start
+
+                m_time.append(temp / 100)
+
+            self.clear()
+            for radius in range(50, 1000, 50):
+                temp = 0
+                for _ in range(100):
+                    self.pen.setColor(Qt.white)
+                    start = time.time()
+                    self.scene.addEllipse(0, 0, 2 * radius, 2 * radius)
+                    end = time.time()
+                    temp += end - start
+
+                l_time.append(temp / 100)
+
+            self.clear()
+
+            self.pen.setColor(self.current_color)
+
+            plt.title("Сравнение алгоритмов для окружностей")
+            step = [i for i in range(50, 1000, 50)]
+
+            plt.plot(step, c_time, 'r')
+            plt.plot(step, p_time, 'c')
+            plt.plot(step, b_time, 'g')
+            plt.plot(step, m_time, 'b')
+            plt.plot(step, l_time, 'm')
+
+            plt.show()
 
     def clear(self):
         self.scene.clear()
