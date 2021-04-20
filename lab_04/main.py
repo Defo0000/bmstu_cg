@@ -16,7 +16,7 @@ class mywindow(QtWidgets.QMainWindow):
         super(mywindow, self).__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-        self.setWindowTitle("Лабораторная работа № 4")
+        self.setWindowTitle("Лабораторная работа № 4: генерация окружностей и эллипсов.")
         self.move(225, 50)
 
         self.current_color = QColor(255, 255, 255)
@@ -100,6 +100,11 @@ class mywindow(QtWidgets.QMainWindow):
         self.enter_spec_amount = QtWidgets.QLineEdit(self)
         self.enter_spec_amount.setStyleSheet("background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)")
         self.enter_spec_amount.setGeometry(1080, 520, 130, 30)
+
+        self.enter_spec_first.setText("50")
+        self.enter_spec_sec.setText("250")
+        self.enter_spec_step.setText("20")
+        self.enter_spec_amount.setText("")
 
         # Рисование спектра
         self.modes = QtWidgets.QComboBox(self)
@@ -187,11 +192,9 @@ class mywindow(QtWidgets.QMainWindow):
         self.pen.setColor(self.current_color)
 
         if self.mode == "Окружность":
-            res = self.get_circle_spectrum_params()
+            res = self.get_circle_spectrum_params(False)
             if res != -1:
-                start, end, k = res
-                if self.algorithm == "Параметрическое уравнение":
-                    pass
+                self.draw_circle_spectrum(*res)
         else:
             spectrum_params = self.get_ellipse_spectrum_params()
             if spectrum_params != -1:
@@ -200,6 +203,61 @@ class mywindow(QtWidgets.QMainWindow):
     def draw_figure(self, dots):
         for i in range(0, len(dots) - 1, 1):
             self.scene.addLine(dots[i].x, dots[i].y, dots[i + 1].x, dots[i + 1].y, self.pen)
+
+    def draw_circle_spectrum(self, k1, k2, k3, x_center, y_center, mood):
+        if self.algorithm == "Каноническое уравнение":
+            if mood == "SES":
+                for radius in np.arange(k1, k2, k3):
+                    dots = canonical_circle(radius, x_center, y_center)
+                    self.draw_figure(dots)
+
+            if mood == "SEA":
+                step = (k2 - k1) / k3
+                for radius in np.arange(k1, k2, step):
+                    dots = canonical_circle(radius, x_center, y_center)
+                    self.draw_figure(dots)
+
+            if mood == "SSA":
+                end = k1 + k2 * k3
+                for radius in np.arange(k1, end, k2):
+                    dots = canonical_circle(radius, x_center, y_center)
+                    self.draw_figure(dots)
+
+        if self.algorithm == "Параметрическое уравнение":
+            if mood == "SES":
+                for radius in np.arange(k1, k2, k3):
+                    dots = parametric_circle(radius, x_center, y_center)
+                    self.draw_figure(dots)
+
+            if mood == "SEA":
+                step = (k2 - k1) / k3
+                for radius in np.arange(k1, k2, step):
+                    dots = parametric_circle(radius, x_center, y_center)
+                    self.draw_figure(dots)
+
+            if mood == "SSA":
+                end = k1 + k2 * k3
+                for radius in np.arange(k1, end, k2):
+                    dots = parametric_circle(radius, x_center, y_center)
+                    self.draw_figure(dots)
+
+        if self.algorithm == "Библиотечный алгоритм":
+            if mood == "SES":
+                for radius in np.arange(k1, k2, k3):
+                    self.scene.addEllipse(x_center - radius, y_center - radius,
+                                          2 * radius, 2 * radius, self.pen)
+
+            if mood == "SEA":
+                step = (k2 - k1) / k3
+                for radius in np.arange(k1, k2, step):
+                    self.scene.addEllipse(x_center - radius, y_center - radius,
+                                          2 * radius, 2 * radius, self.pen)
+
+            if mood == "SSA":
+                end = k1 + k2 * k3
+                for radius in np.arange(k1, end, k2):
+                    self.scene.addEllipse(x_center - radius, y_center - radius,
+                                          2 * radius, 2 * radius, self.pen)
 
     def draw_ellipse_spectrum(self, a, b, x_center, y_center, step, amount):
         if self.algorithm == "Каноническое уравнение":
@@ -271,6 +329,11 @@ class mywindow(QtWidgets.QMainWindow):
             self.spec_first_lbl.setText("    Нач. радиус:")
             self.spec_sec_lbl.setText("  Конеч. радиус:")
             self.spec_amount_lbl.setText("  Кол-во окр-тей:")
+
+            self.enter_spec_first.setText("50")
+            self.enter_spec_sec.setText("250")
+            self.enter_spec_step.setText("20")
+            self.enter_spec_amount.setText("")
             self.mode = "circle"
 
     def get_circle_params(self):
@@ -314,51 +377,92 @@ class mywindow(QtWidgets.QMainWindow):
 
         return a, b, x_center, y_center
 
-    def get_circle_spectrum_params(self):
-        start = self.enter_spec_first.text()
-        if self.valid_pos_float(start):
-            return -1
-        start = float(start)
-
-        end = self.enter_spec_sec.text()
-        if self.valid_pos_float(end):
-            return -1
-        end = float(end)
-
-        k = self.enter_spec_params.text()
-        if self.valid_pos_float(k):
-            return -1
-        k = float(k)
-
-        return start, end, k
-
-    def get_ellipse_spectrum_params(self):
+    def get_circle_spectrum_params(self, prnt = True):
         x_center = self.ui.xc_lbl.text()
-        if self.valid_float(x_center):
+        if self.valid_float(x_center, prnt):
             return -1
         x_center = float(x_center)
 
         y_center = self.ui.yc_lbl.text()
+        if self.valid_float(y_center, prnt):
+            return - 1
+        y_center = float(y_center)
+
+        # Возможны 3 комбинации ввода:
+        # 1) нач.радиус, конеч.радиус, шаг
+        # 2) нач.радиус, конеч.радиус, кол-во
+        # 3) нач.радиус, шаг, кол-во
+        # Что первое случится, то и возьмется за основу
+
+        start = self.enter_spec_first.text()
+        end = self.enter_spec_sec.text()
+        step = self.enter_spec_step.text()
+        amount = self.enter_spec_amount.text()
+
+        if self.valid_pos_float(start, prnt):
+            return -1
+        start = float(start)
+
+        if self.valid_pos_float(end, prnt) == -1: # Возможна только третья комбинация
+            if self.valid_pos_float(step, prnt):
+                return -1
+            step = float(step)
+            if self.valid_pos_int(amount, prnt):
+                return -1
+            amount = int(amount)
+            return start, step, amount, x_center, y_center, "SSA"
+        elif self.valid_pos_float(end, prnt):
+            return -1
+        end = float(end)
+
+        if start > end:
+            msg_error = QMessageBox()
+            msg_error.setIcon(QMessageBox.Critical)
+            msg_error.setStandardButtons(QMessageBox.Close)
+            msg_error.setWindowTitle("Ошибка ввода данных")
+            msg_error.setText("Ошибка: начальный радиус окружности больше конечного.")
+            msg_error.exec_()
+            return -1
+
+        if self.valid_pos_float(step, prnt) == -1:
+            if self.valid_pos_int(amount, prnt):
+                return -1
+            amount = int(amount)
+            return start, end, amount, x_center, y_center, "SEA"
+        elif self.valid_pos_float(step, prnt):
+            return -1
+
+        step = float(step)
+        return start, end, step, x_center, y_center, "SES"
+
+    def get_ellipse_spectrum_params(self):
+        x_center = self.ui.xc_lbl.text()
+        y_center = self.ui.yc_lbl.text()
+        a = self.enter_spec_first.text()
+        b = self.enter_spec_sec.text()
+        step = self.enter_spec_step.text()
+        amount = self.enter_spec_amount.text()
+
+        if self.valid_float(x_center):
+            return -1
+        x_center = float(x_center)
+
         if self.valid_float(y_center):
             return - 1
         y_center = float(y_center)
 
-        a = self.enter_spec_first.text()
         if self.valid_pos_float(a):
             return -1
         a = float(a)
 
-        b = self.enter_spec_sec.text()
         if self.valid_pos_float(b):
             return -1
         b = float(b)
 
-        step = self.enter_spec_step.text()
-        if self.valid_float(step):
+        if self.valid_pos_float(step):
             return -1
         step = float(step)
 
-        amount = self.enter_spec_amount.text()
         if self.valid_pos_int(amount):
             return -1
         amount = int(amount)
@@ -377,7 +481,7 @@ class mywindow(QtWidgets.QMainWindow):
         if s == "Белый(цвет фона)":
             return QColor(255, 255, 255)
 
-    def valid_float(self, x):
+    def valid_float(self, x, prnt = True):
         msg_error = QMessageBox()
         msg_error.setIcon(QMessageBox.Critical)
         msg_error.setStandardButtons(QMessageBox.Close)
@@ -387,15 +491,17 @@ class mywindow(QtWidgets.QMainWindow):
             return 0
         except:
             if x == "":
-                msg_error.setText("Ошибка: пустое поле ввода.")
-                msg_error.exec_()
+                if prnt:
+                    msg_error.setText("Ошибка: пустое поле ввода.")
+                    msg_error.exec_()
                 return -1
             else:
-                msg_error.setText("Ошибка: введено невещественное число.")
-                msg_error.exec_()
+                if prnt:
+                    msg_error.setText("Ошибка: введено невещественное число.")
+                    msg_error.exec_()
                 return -2
 
-    def valid_pos_int(self, x):
+    def valid_pos_int(self, x, prnt = True):
         msg_error = QMessageBox()
         msg_error.setIcon(QMessageBox.Critical)
         msg_error.setStandardButtons(QMessageBox.Close)
@@ -405,29 +511,35 @@ class mywindow(QtWidgets.QMainWindow):
             return 0
         except:
             if x == "":
-                msg_error.setText("Ошибка: пустое поле ввода.")
-                msg_error.exec_()
+                if prnt:
+                    msg_error.setText("Ошибка: пустое поле ввода.")
+                    msg_error.exec_()
                 return -1
             elif x <= 0:
-                msg_error.setText("Ошибка: количество не может быть неположительным.")
-                msg_error.exec_()
+                if prnt:
+                    msg_error.setText("Ошибка: количество не может быть неположительным.")
+                    msg_error.exec_()
                 return -1
             else:
-                msg_error.setText("Ошибка: введено невещественное число.")
-                msg_error.exec_()
+                if prnt:
+                    msg_error.setText("Ошибка: введено невещественное число.")
+                    msg_error.exec_()
                 return -2
 
-    def valid_pos_float(self, x):
+    def valid_pos_float(self, x, prnt = True):
         msg_error = QMessageBox()
         msg_error.setIcon(QMessageBox.Critical)
         msg_error.setStandardButtons(QMessageBox.Close)
         msg_error.setWindowTitle("Ошибка ввода данных")
-        if (self.valid_float(x)):
-            return -1
+        res = self.valid_float(x, prnt)
+        if res:
+            return res
         x = float(x)
         if x < 0:
-            msg_error.setText("Ошибка: необходимо ввести неотрицательное число.")
-            msg_error.exec_()
+            if prnt:
+                msg_error.setText("Ошибка: необходимо ввести неотрицательное число.")
+                msg_error.exec_()
+            return -3
 
     def clear(self):
         self.scene.clear()
