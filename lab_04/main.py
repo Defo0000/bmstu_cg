@@ -10,6 +10,8 @@ import matplotlib.pyplot as plt
 
 from canonical import *
 from parametric import *
+from brezenham import *
+from middle_point import *
 
 class mywindow(QtWidgets.QMainWindow):
     def __init__(self):
@@ -165,6 +167,10 @@ class mywindow(QtWidgets.QMainWindow):
                     dots = parametric_circle(radius, x_center, y_center)
                     self.draw_figure(dots)
 
+                if self.algorithm == "Алгоритм Брезенхема":
+                    dots = brezenham_circle(radius, x_center, y_center)
+                    self.draw_figure(dots)
+
                 if self.algorithm == "Библиотечный алгоритм":
                     self.scene.addEllipse(x_center - radius, y_center - radius,
                                           2 * radius, 2 * radius, self.pen)
@@ -184,6 +190,10 @@ class mywindow(QtWidgets.QMainWindow):
                 if self.algorithm == "Библиотечный алгоритм":
                     self.scene.addEllipse(x_center - a, y_center - b,
                                           2 * a, 2 * b, self.pen)
+
+                if self.algorithm == "Алгоритм Брезенхема":
+                    dots = brezenham_ellipse(a, b, x_center, y_center)
+                    self.draw_figure(dots)
 
     def spectrum(self):
         self.algorithm = self.algorithms.currentText()
@@ -259,6 +269,24 @@ class mywindow(QtWidgets.QMainWindow):
                     self.scene.addEllipse(x_center - radius, y_center - radius,
                                           2 * radius, 2 * radius, self.pen)
 
+        if self.algorithm == "Алгоритм Брезенхема":
+            if mood == "SES":
+                for radius in np.arange(k1, k2, k3):
+                    dots = brezenham_circle(radius, x_center, y_center)
+                    self.draw_figure(dots)
+
+            if mood == "SEA":
+                step = (k2 - k1) / k3
+                for radius in np.arange(k1, k2, step):
+                    dots = brezenham_circle(radius, x_center, y_center)
+                    self.draw_figure(dots)
+
+            if mood == "SSA":
+                end = k1 + k2 * k3
+                for radius in np.arange(k1, end, k2):
+                    dots = brezenham_circle(radius, x_center, y_center)
+                    self.draw_figure(dots)
+
     def draw_ellipse_spectrum(self, a, b, x_center, y_center, step, amount):
         if self.algorithm == "Каноническое уравнение":
             for _ in range(amount):
@@ -274,24 +302,19 @@ class mywindow(QtWidgets.QMainWindow):
                 a += step
                 b += step
 
+        if self.algorithm == "Алгоритм Брезенхема":
+            for _ in range(amount):
+                dots = brezenham_ellipse(a, b, x_center, y_center)
+                self.draw_figure(dots)
+                a += step
+                b += step
+
         if self.algorithm == "Библиотечный алгоритм":
             for _ in range(amount):
                 self.scene.addEllipse(x_center - a, y_center - b,
                                       2 * a, 2 * b, self.pen)
                 a += step
                 b += step
-
-    def brezenham_circle(self):
-        pass
-
-    def brezenham_ellipse(self):
-        pass
-
-    def middle_point_circle(self):
-        pass
-
-    def middle_point_ellipse(self):
-        pass
 
     def change_visible(self):
         if self.modes.currentText() == "Эллипс":
