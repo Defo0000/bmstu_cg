@@ -611,73 +611,150 @@ class mywindow(QtWidgets.QMainWindow):
         m_time = []
         l_time = []
 
+        rep = 25
+        left = 1
+        right = 10000
+        step = 1000
+
         if self.mode == "Окружность":
 
-            for radius in range(50, 1000, 50):
+            for radius in range(left, right, step):
                 temp = 0
-                for _ in range(100):
+                for _ in range(rep):
                     start = time.time()
                     canonical_circle(radius, 0, 0)
                     end = time.time()
                     temp += end - start
 
-                c_time.append(temp / 100)
+                c_time.append(temp / rep)
 
-            for radius in range(50, 1000, 50):
+            for radius in range(left, right, step):
                 temp = 0
-                for _ in range(100):
+                for _ in range(rep):
                     start = time.time()
                     parametric_circle(radius, 0, 0)
                     end = time.time()
                     temp += end - start
 
-                p_time.append(temp / 100)
+                p_time.append(temp / rep)
 
-            for radius in range(50, 1000, 50):
+            for radius in range(left, right, step):
                 temp = 0
-                for _ in range(100):
+                for _ in range(rep):
                     start = time.time()
                     brezenham_circle(radius, 0, 0)
                     end = time.time()
                     temp += end - start
 
-                b_time.append(temp / 100)
+                b_time.append(temp / rep)
 
-            for radius in range(50, 1000, 50):
+            for radius in range(left, right, step):
                 temp = 0
-                for _ in range(100):
+                for _ in range(rep):
                     start = time.time()
                     middle_point_circle(radius, 0, 0)
                     end = time.time()
                     temp += end - start
 
-                m_time.append(temp / 100)
+                m_time.append(temp / rep)
 
             self.clear()
-            for radius in range(50, 1000, 50):
+            for radius in range(left, right, step):
                 temp = 0
-                for _ in range(100):
+                for _ in range(rep):
                     self.pen.setColor(Qt.white)
                     start = time.time()
                     self.scene.addEllipse(0, 0, 2 * radius, 2 * radius)
                     end = time.time()
                     temp += end - start
 
-                l_time.append(temp / 100)
+                l_time.append(temp / rep)
 
             self.clear()
 
             self.pen.setColor(self.current_color)
 
             plt.title("Сравнение алгоритмов для окружностей")
-            step = [i for i in range(50, 1000, 50)]
 
-            plt.plot(step, c_time, 'r')
-            plt.plot(step, p_time, 'c')
-            plt.plot(step, b_time, 'g')
-            plt.plot(step, m_time, 'b')
-            plt.plot(step, l_time, 'm')
+            step = [i for i in range(left, right, step)]
 
+            plt.plot(step, c_time, 'r', label = "Каноническое уравнение")
+            plt.plot(step, p_time, 'c', label = "Параметрическое уравение")
+            plt.plot(step, b_time, 'g', label = "Алгоритм Брезенхема")
+            plt.plot(step, m_time, 'b', label = "Алгоритм средней точки")
+            plt.plot(step, l_time, 'm', label = "Библиотечный алгоритм")
+
+            plt.legend()
+            plt.show()
+
+        else:
+            for radius in range(left, right + 1, step):
+                temp = 0
+                for _ in range(rep):
+                    start = time.time()
+                    canonical_ellipse(radius, radius, 0, 0)
+                    end = time.time()
+                    temp += end - start
+
+                c_time.append(temp / rep)
+
+            for radius in range(left, right, step):
+                temp = 0
+                for _ in range(rep):
+                    start = time.time()
+                    parametric_ellipse(radius, radius, 0, 0)
+                    end = time.time()
+                    temp += end - start
+
+                p_time.append(temp / rep)
+
+            for radius in range(left, right, step):
+                temp = 0
+                for _ in range(rep):
+                    start = time.time()
+                    brezenham_ellipse(radius, radius, 0, 0)
+                    end = time.time()
+                    temp += end - start
+
+                b_time.append(temp / rep)
+
+            for radius in range(left, right, step):
+                temp = 0
+                for _ in range(rep):
+                    start = time.time()
+                    middle_point_ellipse(radius, radius, 0, 0)
+                    end = time.time()
+                    temp += end - start
+
+                m_time.append(temp / rep)
+
+            self.clear()
+            for radius in range(left, right, step):
+                temp = 0
+                for _ in range(rep):
+                    self.pen.setColor(Qt.white)
+                    start = time.time()
+                    self.scene.addEllipse(0, 0, 2 * radius, 2 * radius)
+                    end = time.time()
+                    temp += end - start
+
+                l_time.append(temp / rep)
+
+            self.clear()
+
+            self.pen.setColor(self.current_color)
+
+            plt.title("Сравнение алгоритмов для эллипсов")
+
+            step = [i for i in range(left, right, step)]
+
+            plt.plot(step, c_time, 'r', label="Каноническое уравнение")
+            plt.plot(step, p_time, 'c', label="Параметрическое уравение")
+            plt.plot(step, b_time, 'g', label="Алгоритм Брезенхема")
+            plt.plot(step, m_time, 'b', label="Алгоритм средней точки")
+            plt.plot(step, l_time, 'm', label="Библиотечный алгоритм")
+
+            plt.legend()
             plt.show()
 
     def clear(self):
