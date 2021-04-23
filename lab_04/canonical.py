@@ -4,7 +4,7 @@ from math import *
 def canonical_circle(radius, x_center, y_center):
     dots = []
 
-    for x in range(int(x_center), x_center + round(radius / sqrt(2)) + 1):
+    for x in range(int(x_center), round(x_center + radius / sqrt(2)) + 1):
         y = sqrt(radius ** 2 - (x - x_center) ** 2) + y_center
         dots.append(Point(x, y))
 

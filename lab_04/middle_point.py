@@ -32,6 +32,8 @@ def middle_point_ellipse(a, b, x_center, y_center):
 
     a2 = a * a
     b2 = b * b
+    bd = 2 * b2
+    ad = 2 * a2
 
     x = 0
     y = b
@@ -43,12 +45,9 @@ def middle_point_ellipse(a, b, x_center, y_center):
 
         if delta > 0:
             y -= 1
-            x += 1
-            delta += b2 * (2 * x + 1)
-            delta -= 2 * a2 * y
-        else:
-            x += 1
-            delta += b2 * (2 * x + 1)
+            delta -= ad * y
+        x += 1
+        delta += x + 1 + bd + b2
         dots.append(Point(x + x_center, y + y_center))
 
     x = a
@@ -62,12 +61,9 @@ def middle_point_ellipse(a, b, x_center, y_center):
 
         if delta > 0:
             x -= 1
-            y += 1
-            delta -= 2 * b2 * x
-            delta += a2 * (2 * y + 1)
-        else:
-            y += 1
-            delta += a2 * (2 * y + 1)
+            delta -= bd * x
+        y += 1
+        delta += y + 1 + bd + b2
         dots.append(Point(x + x_center, y + y_center))
 
     # Необходимо для корректного расположения точек в массиве (друг за другом) для последующего отображения и рисовки

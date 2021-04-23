@@ -71,46 +71,46 @@ class mywindow(QtWidgets.QMainWindow):
         self.enter_b.setDisabled(True)
         self.enter_b.setText("100")
 
-        self.spec_first_lbl = QtWidgets.QLabel(self)
-        self.spec_first_lbl.setText("    Нач. радиус:")
-        self.spec_first_lbl.setStyleSheet("background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)")
-        self.spec_first_lbl.setGeometry(900, 400, 165, 30)
-
-        self.enter_spec_first = QtWidgets.QLineEdit(self)
-        self.enter_spec_first.setStyleSheet("background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)")
-        self.enter_spec_first.setGeometry(1080, 400, 130, 30)
-
-        self.spec_sec_lbl = QtWidgets.QLabel(self)
-        self.spec_sec_lbl.setText("  Конеч. радиус:")
-        self.spec_sec_lbl.setStyleSheet("background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)")
-        self.spec_sec_lbl.setGeometry(900, 440, 165, 30)
-
-        self.enter_spec_sec = QtWidgets.QLineEdit(self)
-        self.enter_spec_sec.setStyleSheet("background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)")
-        self.enter_spec_sec.setGeometry(1080, 440, 130, 30)
-
         self.spec_step_lbl = QtWidgets.QLabel(self)
         self.spec_step_lbl.setText("  Шаг изменения:")
         self.spec_step_lbl.setStyleSheet("background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)")
-        self.spec_step_lbl.setGeometry(900, 480, 165, 30)
+        self.spec_step_lbl.setGeometry(900, 400, 165, 30)
 
         self.enter_spec_step = QtWidgets.QLineEdit(self)
         self.enter_spec_step.setStyleSheet("background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)")
-        self.enter_spec_step.setGeometry(1080, 480, 130, 30)
+        self.enter_spec_step.setGeometry(1080, 400, 130, 30)
 
         self.spec_amount_lbl = QtWidgets.QLabel(self)
         self.spec_amount_lbl.setText("  Кол-во окр-тей:")
         self.spec_amount_lbl.setStyleSheet("background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)")
-        self.spec_amount_lbl.setGeometry(900, 520, 165, 30)
+        self.spec_amount_lbl.setGeometry(900, 440, 165, 30)
 
         self.enter_spec_amount = QtWidgets.QLineEdit(self)
         self.enter_spec_amount.setStyleSheet("background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)")
-        self.enter_spec_amount.setGeometry(1080, 520, 130, 30)
+        self.enter_spec_amount.setGeometry(1080, 440, 130, 30)
+
+        self.spec_first_lbl = QtWidgets.QLabel(self)
+        self.spec_first_lbl.setText("    Нач. радиус:")
+        self.spec_first_lbl.setStyleSheet("background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)")
+        self.spec_first_lbl.setGeometry(900, 480, 165, 30)
+
+        self.enter_spec_first = QtWidgets.QLineEdit(self)
+        self.enter_spec_first.setStyleSheet("background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)")
+        self.enter_spec_first.setGeometry(1080, 480, 130, 30)
+
+        self.spec_sec_lbl = QtWidgets.QLabel(self)
+        self.spec_sec_lbl.setText("")
+        self.spec_sec_lbl.setStyleSheet("background-color: rgb(52, 101, 164); color: rgb(136, 138, 133);")
+        self.spec_sec_lbl.setGeometry(900, 520, 165, 30)
+
+        self.enter_spec_sec = QtWidgets.QLineEdit(self)
+        self.enter_spec_sec.setStyleSheet("background-color: rgb(52, 101, 164); color: rgb(136, 138, 133);")
+        self.enter_spec_sec.setGeometry(1080, 520, 130, 30)
+        self.enter_spec_sec.setDisabled(True)
 
         self.enter_spec_first.setText("50")
-        self.enter_spec_sec.setText("250")
-        self.enter_spec_step.setText("20")
-        self.enter_spec_amount.setText("")
+        self.enter_spec_step.setText("10")
+        self.enter_spec_amount.setText("20")
 
         # Рисование спектра
         self.modes = QtWidgets.QComboBox(self)
@@ -222,96 +222,41 @@ class mywindow(QtWidgets.QMainWindow):
         for i in range(0, len(dots) - 1, 1):
             self.scene.addLine(dots[i].x, dots[i].y, dots[i + 1].x, dots[i + 1].y, self.pen)
 
-    def draw_circle_spectrum(self, k1, k2, k3, x_center, y_center, mood):
+    def draw_circle_spectrum(self, start, step, amount, x_center, y_center):
         if self.algorithm == "Каноническое уравнение":
-            if mood == "SES":
-                for radius in np.arange(k1, k2, k3):
-                    dots = canonical_circle(radius, x_center, y_center)
-                    self.draw_figure(dots)
 
-            if mood == "SEA":
-                step = (k2 - k1) / k3
-                for radius in np.arange(k1, k2, step):
-                    dots = canonical_circle(radius, x_center, y_center)
-                    self.draw_figure(dots)
-
-            if mood == "SSA":
-                end = k1 + k2 * k3
-                for radius in np.arange(k1, end, k2):
-                    dots = canonical_circle(radius, x_center, y_center)
-                    self.draw_figure(dots)
+            end = start + step * amount
+            for radius in np.arange(start, end, step):
+                dots = canonical_circle(radius, x_center, y_center)
+                self.draw_figure(dots)
 
         if self.algorithm == "Параметрическое уравнение":
-            if mood == "SES":
-                for radius in np.arange(k1, k2, k3):
-                    dots = parametric_circle(radius, x_center, y_center)
-                    self.draw_figure(dots)
 
-            if mood == "SEA":
-                step = (k2 - k1) / k3
-                for radius in np.arange(k1, k2, step):
-                    dots = parametric_circle(radius, x_center, y_center)
-                    self.draw_figure(dots)
-
-            if mood == "SSA":
-                end = k1 + k2 * k3
-                for radius in np.arange(k1, end, k2):
-                    dots = parametric_circle(radius, x_center, y_center)
-                    self.draw_figure(dots)
+            end = start + step * amount
+            for radius in np.arange(start, end, step):
+                dots = parametric_circle(radius, x_center, y_center)
+                self.draw_figure(dots)
 
         if self.algorithm == "Алгоритм Брезенхема":
-            if mood == "SES":
-                for radius in np.arange(k1, k2, k3):
-                    dots = brezenham_circle(radius, x_center, y_center)
-                    self.draw_figure(dots)
 
-            if mood == "SEA":
-                step = (k2 - k1) / k3
-                for radius in np.arange(k1, k2, step):
-                    dots = brezenham_circle(radius, x_center, y_center)
-                    self.draw_figure(dots)
-
-            if mood == "SSA":
-                end = k1 + k2 * k3
-                for radius in np.arange(k1, end, k2):
-                    dots = brezenham_circle(radius, x_center, y_center)
-                    self.draw_figure(dots)
+            end = start + step * amount
+            for radius in np.arange(start, end, step):
+                dots = brezenham_circle(radius, x_center, y_center)
+                self.draw_figure(dots)
 
         if self.algorithm == "Алгоритм средней точки":
-            if mood == "SES":
-                for radius in np.arange(k1, k2, k3):
-                    dots = middle_point_circle(radius, x_center, y_center)
-                    self.draw_figure(dots)
 
-            if mood == "SEA":
-                step = (k2 - k1) / k3
-                for radius in np.arange(k1, k2, step):
-                    dots = middle_point_circle(radius, x_center, y_center)
-                    self.draw_figure(dots)
-
-            if mood == "SSA":
-                end = k1 + k2 * k3
-                for radius in np.arange(k1, end, k2):
-                    dots = middle_point_circle(radius, x_center, y_center)
-                    self.draw_figure(dots)
+            end = start + step * amount
+            for radius in np.arange(start, end, step):
+                dots = middle_point_circle(radius, x_center, y_center)
+                self.draw_figure(dots)
 
         if self.algorithm == "Библиотечный алгоритм":
-            if mood == "SES":
-                for radius in np.arange(k1, k2, k3):
-                    self.scene.addEllipse(x_center - radius, y_center - radius,
-                                          2 * radius, 2 * radius, self.pen)
 
-            if mood == "SEA":
-                step = (k2 - k1) / k3
-                for radius in np.arange(k1, k2, step):
-                    self.scene.addEllipse(x_center - radius, y_center - radius,
-                                          2 * radius, 2 * radius, self.pen)
-
-            if mood == "SSA":
-                end = k1 + k2 * k3
-                for radius in np.arange(k1, end, k2):
-                    self.scene.addEllipse(x_center - radius, y_center - radius,
-                                          2 * radius, 2 * radius, self.pen)
+            end = start + step * amount
+            for radius in np.arange(start, end, step):
+                self.scene.addEllipse(x_center - radius, y_center - radius,
+                                      2 * radius, 2 * radius, self.pen)
 
 
     def draw_ellipse_spectrum(self, a, b, x_center, y_center, step, amount):
@@ -369,6 +314,9 @@ class mywindow(QtWidgets.QMainWindow):
 
             self.enter_spec_first.setText("80")
             self.enter_spec_sec.setText("10")
+            self.enter_spec_sec.setDisabled(False)
+            self.enter_spec_sec.setStyleSheet("background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)")
+            self.spec_sec_lbl.setStyleSheet("background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)")
             self.enter_spec_step.setText("20")
             self.enter_spec_amount.setText("10")
 
@@ -387,13 +335,16 @@ class mywindow(QtWidgets.QMainWindow):
             self.r_lbl.setStyleSheet("background-color: rgb(255, 255, 255); color: rgb(0, 0, 0)")
             self.ui.draw_btn.setText("Построить окружность")
             self.spec_first_lbl.setText("    Нач. радиус:")
-            self.spec_sec_lbl.setText("  Конеч. радиус:")
+            self.spec_sec_lbl.setText("")
             self.spec_amount_lbl.setText("  Кол-во окр-тей:")
 
             self.enter_spec_first.setText("50")
-            self.enter_spec_sec.setText("250")
-            self.enter_spec_step.setText("20")
-            self.enter_spec_amount.setText("")
+            self.enter_spec_sec.setText("")
+            self.enter_spec_sec.setDisabled(True)
+            self.enter_spec_sec.setStyleSheet("background-color: rgb(52, 101, 164); color: rgb(136, 138, 133);")
+            self.spec_sec_lbl.setStyleSheet("background-color: rgb(52, 101, 164); color: rgb(136, 138, 133);")
+            self.enter_spec_step.setText("10")
+            self.enter_spec_amount.setText("20")
 
             self.ui.analysis_btn.setText("Сравнение алгоритмов\n для окружностей")
 
@@ -451,14 +402,7 @@ class mywindow(QtWidgets.QMainWindow):
             return - 1
         y_center = float(y_center)
 
-        # Возможны 3 комбинации ввода:
-        # 1) нач.радиус, конеч.радиус, шаг
-        # 2) нач.радиус, конеч.радиус, кол-во
-        # 3) нач.радиус, шаг, кол-во
-        # Что первое случится, то и возьмется за основу
-
         start = self.enter_spec_first.text()
-        end = self.enter_spec_sec.text()
         step = self.enter_spec_step.text()
         amount = self.enter_spec_amount.text()
 
@@ -466,37 +410,15 @@ class mywindow(QtWidgets.QMainWindow):
             return -1
         start = float(start)
 
-        if self.valid_pos_float(end, prnt) == -1: # Возможна только третья комбинация
-            if self.valid_pos_float(step, prnt):
-                return -1
-            step = float(step)
-            if self.valid_pos_int(amount, prnt):
-                return -1
-            amount = int(amount)
-            return start, step, amount, x_center, y_center, "SSA"
-        elif self.valid_pos_float(end, prnt):
+        if self.valid_pos_float(step, prnt):
             return -1
-        end = float(end)
-
-        if start > end:
-            msg_error = QMessageBox()
-            msg_error.setIcon(QMessageBox.Critical)
-            msg_error.setStandardButtons(QMessageBox.Close)
-            msg_error.setWindowTitle("Ошибка ввода данных")
-            msg_error.setText("Ошибка: начальный радиус окружности больше конечного.")
-            msg_error.exec_()
-            return -1
-
-        if self.valid_pos_float(step, prnt) == -1:
-            if self.valid_pos_int(amount, prnt):
-                return -1
-            amount = int(amount)
-            return start, end, amount, x_center, y_center, "SEA"
-        elif self.valid_pos_float(step, prnt):
-            return -1
-
         step = float(step)
-        return start, end, step, x_center, y_center, "SES"
+
+        if self.valid_pos_int(amount, prnt):
+            return -1
+        amount = float(amount)
+
+        return start, step, amount, x_center, y_center
 
     def get_ellipse_spectrum_params(self):
         x_center = self.ui.xc_lbl.text()
@@ -611,10 +533,10 @@ class mywindow(QtWidgets.QMainWindow):
         m_time = []
         l_time = []
 
-        rep = 25
-        left = 1
-        right = 10000
-        step = 1000
+        rep = 500
+        left = 200
+        right = 700
+        step = 100
 
         if self.mode == "Окружность":
 
@@ -675,6 +597,8 @@ class mywindow(QtWidgets.QMainWindow):
             self.pen.setColor(self.current_color)
 
             plt.title("Сравнение алгоритмов для окружностей")
+            plt.xlabel("Радиус")
+            plt.ylabel("Время, мс")
 
             step = [i for i in range(left, right, step)]
 
@@ -688,7 +612,7 @@ class mywindow(QtWidgets.QMainWindow):
             plt.show()
 
         else:
-            for radius in range(left, right + 1, step):
+            for radius in range(left, right, step):
                 temp = 0
                 for _ in range(rep):
                     start = time.time()
