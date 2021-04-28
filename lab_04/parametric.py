@@ -6,7 +6,7 @@ def parametric_circle(radius, x_center, y_center):
     dots = []
 
     step = 1 / radius
-    for t in np.arange(pi / 2, pi / 4, -step):
+    for t in np.arange(0, pi / 4 + step, step):
         x = x_center + radius * cos(t)
         y = y_center + radius * sin(t)
         dots.append(Point(x, y))
@@ -20,7 +20,7 @@ def parametric_ellipse(a, b, x_center, y_center):
     dots = []
 
     step = 1 / max(a, b)
-    for t in np.arange(pi/2, 0, -step):
+    for t in np.arange(0, pi / 2 + step, step):
         x = x_center + a * cos(t)
         y = y_center + b * sin(t)
         dots.append(Point(x, y))

@@ -4,7 +4,6 @@ from PyQt5.QtWidgets import QGraphicsScene, QGraphicsView, QMessageBox
 from window import Ui_MainWindow
 from PyQt5.QtCore import Qt
 import sys
-import numpy as np
 
 import time
 import matplotlib.pyplot as plt
@@ -199,6 +198,10 @@ class mywindow(QtWidgets.QMainWindow):
                     dots = middle_point_ellipse(a, b, x_center, y_center)
                     self.draw_figure(dots)
 
+                if self.algorithm == "Алгоритм Брезенхема":
+                    dots = brezenham_ellipse(a, b, x_center, y_center)
+                    self.draw_figure(dots)
+
                 if self.algorithm == "Библиотечный алгоритм":
                     self.scene.addEllipse(x_center - a, y_center - b,
                                           2 * a, 2 * b, self.pen)
@@ -219,8 +222,8 @@ class mywindow(QtWidgets.QMainWindow):
                 self.draw_ellipse_spectrum(*spectrum_params)
 
     def draw_figure(self, dots):
-        for i in range(0, len(dots) - 1, 1):
-            self.scene.addLine(dots[i].x, dots[i].y, dots[i + 1].x, dots[i + 1].y, self.pen)
+        for i in range(0, len(dots), 1):
+            self.scene.addLine(dots[i].x, dots[i].y, dots[i].x, dots[i].y, self.pen)
 
     def draw_circle_spectrum(self, start, step, amount, x_center, y_center):
         if self.algorithm == "Каноническое уравнение":

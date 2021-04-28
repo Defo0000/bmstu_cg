@@ -4,22 +4,22 @@ from math import *
 def middle_point_circle(radius, x_center, y_center):
     dots = []
 
-    x = 0
-    y = radius
+    x = radius
+    y = 0
 
     dots.append(Point(x + x_center, y + y_center))
 
-    # delta = (x + 1)^2 + (y - 0.5)^2 - radius^2 = [x = 0, y = radius] = 1.25 - radius
+    # delta = (x - 0.5)^2 + (y + 1)^2 - radius^2 = [x = radius, y = 0] = 1.25 - radius
     delta = 1.25 - radius
 
-    while y > x:
-        x += 1
+    while x > y:
+        y += 1
 
-        if delta >= 0:  # Средняя точка вне окружности
-            y -= 1  # Выбирается диагональный пиксель
-            delta += 2 * x - 2 * y + 5
-        else:
-            delta += 2 * x + 3  # Выбирается горизонтальный пиксель
+        if delta > 0:  # Средняя точка вне окружности
+            x -= 1  # Выбирается диагональный пиксель
+            delta -= x + x - 2
+
+        delta += y + y + 3  # Выбирается горизонтальный пиксель
 
         dots.append(Point(x + x_center, y + y_center))
 
@@ -40,36 +40,31 @@ def middle_point_ellipse(a, b, x_center, y_center):
     dots.append(Point(x + x_center, y + y_center))
 
     limit = round(a / sqrt(1 + b2 / a2))
-    delta = b2 - round(a2 * (b - 0.25))
+    f = b2 - round(a2 * (b - 0.25))
     while x < limit:
 
-        if delta > 0:
+        if f > 0:
             y -= 1
-            delta -= ad * y
+            f -= ad * y
         x += 1
-        delta += x + 1 + bd + b2
+        f += b2 * (2 * x + 1)
+
         dots.append(Point(x + x_center, y + y_center))
 
     x = a
     y = 0
 
-    n = len(dots)
-
     limit = round(b / sqrt(1 + a2 / b2))
-    delta = a2 - round(b2 * (a - 0.25))
+    f = a2 - round(b2 * (a - 0.25))
     while y < limit:
 
-        if delta > 0:
+        if f > 0:
             x -= 1
-            delta -= bd * x
+            f -= bd * x
         y += 1
-        delta += y + 1 + bd + b2
-        dots.append(Point(x + x_center, y + y_center))
+        f += a2 * (2 * y + 1)
 
-    # Необходимо для корректного расположения точек в массиве (друг за другом) для последующего отображения и рисовки
-    reverse = dots[n:]
-    reverse = reverse[::-1]
-    dots = dots[:n] + reverse
+        dots.append(Point(x + x_center, y + y_center))
 
     dots = mirror_ellipse(dots, x_center, y_center)
 
