@@ -599,11 +599,14 @@ class mywindow(QtWidgets.QMainWindow):
 
             self.pen.setColor(self.current_color)
 
+            plt.figure(figsize=(9, 8))
+
             plt.title("Сравнение алгоритмов для окружностей")
             plt.xlabel("Радиус")
             plt.ylabel("Время, мс")
 
             step = [i for i in range(left, right, step)]
+
 
             plt.plot(step, c_time, 'r', label = "Каноническое уравнение")
             plt.plot(step, p_time, 'c', label = "Параметрическое уравение")
@@ -671,7 +674,11 @@ class mywindow(QtWidgets.QMainWindow):
 
             self.pen.setColor(self.current_color)
 
+            plt.figure(figsize=(9, 8))
+
             plt.title("Сравнение алгоритмов для эллипсов")
+            plt.xlabel("Радиус")
+            plt.ylabel("Время, мс")
 
             step = [i for i in range(left, right, step)]
 
