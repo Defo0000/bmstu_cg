@@ -1,15 +1,31 @@
 from PyQt5 import QtWidgets
-from PyQt5.QtGui import QPen, QColor, QFont, QKeySequence
+from PyQt5.QtGui import QPen, QColor, QFont
 from PyQt5.QtWidgets import QGraphicsScene, QGraphicsView, QMessageBox
 from PyQt5.QtCore import Qt
 from window import Ui_MainWindow
 import sys
+import time
 
 
 class Point():
     def __init__(self, x, y):
         self.x = x
         self.y = y
+
+
+class Edge():
+    def __init__(self, x_start, y_start, x_end, y_end):
+        self.x0 = x_start
+        self.y0 = y_start
+        self.x1 = x_end
+        self.y1 = y_end
+
+
+class GroupInfo():
+    def __init__(self, x_start, dx, scanline_amount):
+        self.x = x_start
+        self.dx = dx
+        self.scanline_amount = scanline_amount
 
 class mywindow(QtWidgets.QMainWindow):
     def __init__(self):
@@ -28,7 +44,10 @@ class mywindow(QtWidgets.QMainWindow):
 
         self.is_key_ctrl_pressed = False
         self.is_key_h_pressed = False
-        self.is_key_w_pressed = False
+        self.is_key_v_pressed = False
+
+        self.to_end = 0
+        self.connect = True
 
         self.ui.with_delay.setChecked(True)
         self.setMouseTracking(True)
@@ -71,35 +90,27 @@ class mywindow(QtWidgets.QMainWindow):
         x = event.x()
         y = event.y()
 
-        last = len(self.dots) - 1
+        if not self.connect:
 
-        if x <= self.scene_width and y <= self.scene_height:
-            if self.is_key_h_pressed and self.is_key_ctrl_pressed:
-                y = self.dots[last].y
-
-            if self.is_key_w_pressed and self.is_key_ctrl_pressed:
-                x = self.dots[last].x
+            self.connect = True
+            self.to_end = len(self.dots)
 
             self.dots.append(Point(x, y))
-            self.scene.addLine(x, y, self.dots[last].x, self.dots[last].y, self.pen)
+            self.scene.addLine(x, y, x, y, self.pen)
 
-    def keyPressEvent(self, event):
-        if event.key() == Qt.Key_H:
-            self.is_key_h_pressed = True
-        if event.key() == Qt.Key_W:
-            self.is_key_w_pressed = True
-        if event.key() == Qt.Key_Control:
-            self.is_key_ctrl_pressed = True
-        super(mywindow, self).keyPressEvent(event)
+        else:
 
-    def keyReleaseEvent(self, event):
-        if event.key() == Qt.Key_H:
-            self.is_key_h_pressed = False
-        if event.key() == Qt.Key_W:
-            self.is_key_w_pressed = False
-        if event.key() == Qt.Key_Control:
-            self.is_key_ctrl_pressed = False
-        super(mywindow, self).keyReleaseEvent(event)
+            last = len(self.dots) - 1
+
+            if x <= self.scene_width and y <= self.scene_height:
+                if self.is_key_h_pressed and self.is_key_ctrl_pressed:
+                    y = self.dots[last].y
+
+                if self.is_key_v_pressed and self.is_key_ctrl_pressed:
+                    x = self.dots[last].x
+
+                self.dots.append(Point(x, y))
+                self.scene.addLine(x, y, self.dots[last].x, self.dots[last].y, self.pen)
 
     def add(self):
         res = self.get_dot()
@@ -122,14 +133,98 @@ class mywindow(QtWidgets.QMainWindow):
             msg.exec_()
 
     def fill(self):
-        pass
+
+        edges = self.make_edges()
+
+        y_group = [[] for i in range(self.scene_height)]
+
+        for edge in edges:
+            scanline_amount = abs(edge.y1 - edge.y0)
+            if scanline_amount:
+                dx = (edge.x1 - edge.x0) / scanline_amount
+                x_start = edge.x0
+                y_group[edge.y0].append(GroupInfo(x_start, dx, scanline_amount))
+
+        active_edges = []
+
+        for scanline in range(self.scene_height):
+
+            # Обновляем список активных ребер (добавляем новые, если они есть)
+            for i in range(len(y_group[scanline])):
+                active_edges.append(y_group[scanline][i])
+
+            active_edges.sort(key=lambda edge: edge.x)
+
+            # Выполняем закраску
+
+            for i in range(0, len(active_edges), 2):
+                self.scene.addLine(active_edges[i].x, scanline,
+                                   active_edges[i + 1].x, scanline, self.pen)
+                if self.ui.with_delay.isChecked():
+                    QtWidgets.QApplication.processEvents()
+                    time.sleep(0.01)
+
+            # Обновляем список активных ребер (удаляем неактивные, если они есть)
+            i = 0
+            while i < len(active_edges):
+                active_edges[i].x += active_edges[i].dx
+                active_edges[i].scanline_amount -= 1
+                if active_edges[i].scanline_amount < 1:
+                    active_edges.pop(i)
+                else:
+                    i += 1
+
+    def make_edges(self):
+
+        edges = []
+
+        for i in range(len(self.dots) - 1):
+            x0, y0 = self.dots[i].x, self.dots[i].y
+            x1, y1 = self.dots[i + 1].x, self.dots[i + 1].y
+            if y0 > y1:
+                y1, y0 = y0, y1
+                x1, x0 = x0, x1
+
+            edges.append(Edge(x0, y0, x1, y1))
+
+        i = len(self.dots) - 1
+        x0, y0 = self.dots[0].x, self.dots[0].y
+        x1, y1 = self.dots[i].x, self.dots[i].y
+        if y0 > y1:
+            y1, y0 = y0, y1
+            x1, x0 = x0, x1
+
+        edges.append(Edge(x0, y0, x1, y1))
+
+        return edges
 
     def end(self):
         self.current_color = self.get_current_color()
         self.pen.setColor(self.current_color)
 
+        self.connect = False
+
         last = len(self.dots) - 1
-        self.scene.addLine(self.dots[0].x, self.dots[0].y, self.dots[last].x, self.dots[last].y, self.pen)
+        self.scene.addLine(self.dots[self.to_end].x, self.dots[self.to_end].y,
+                           self.dots[last].x, self.dots[last].y, self.pen)
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_H:
+            self.is_key_h_pressed = True
+        if event.key() == Qt.Key_V:
+            self.is_key_v_pressed = True
+        if event.key() == Qt.Key_Control:
+            self.is_key_ctrl_pressed = True
+        super(mywindow, self).keyPressEvent(event)
+
+    def keyReleaseEvent(self, event):
+        if event.key() == Qt.Key_H:
+            self.is_key_h_pressed = False
+        if event.key() == Qt.Key_V:
+            self.is_key_v_pressed = False
+        if event.key() == Qt.Key_Control:
+            self.is_key_ctrl_pressed = False
+        super(mywindow, self).keyReleaseEvent(event)
 
     def get_current_color(self):
         color = self.colors.currentText()
@@ -168,7 +263,7 @@ class mywindow(QtWidgets.QMainWindow):
             msg_error.setText("Ошибка ввода координаты Х: пустое поле ввода.")
             msg_error.exec_()
         if res == -3:
-            msg_error.setText("Ошибка ввода координаты Х: должно быть введено корректное вещественное число.")
+            msg_error.setText("Ошибка ввода координаты Х: должно быть введено корректное целое число.")
             msg_error.exec_()
         if res == -4:
             msg_error.setText("Ошибка ввода координаты Y: координата должна быть положительным числом "
@@ -179,14 +274,14 @@ class mywindow(QtWidgets.QMainWindow):
             msg_error.setText("Ошибка ввода координаты Y: пустое поле ввода.")
             msg_error.exec_()
         if res == -6:
-            msg_error.setText("Ошибка ввода координаты Y: должно быть введено корректное вещественное число.")
+            msg_error.setText("Ошибка ввода координаты Y: должно быть введено корректное целое число.")
             msg_error.exec_()
 
         return res
 
     def is_valid_coordinates(self, x, y):
         try:
-            x = float(x)
+            x = int(x)
             if not (0 <= x <= self.scene_width):
                 return -1
         except:
@@ -196,7 +291,7 @@ class mywindow(QtWidgets.QMainWindow):
                 return -3
 
         try:
-            y = float(y)
+            y = int(y)
             if not (0 <= y <= self.scene_height):
                 return -4
         except:
@@ -210,6 +305,7 @@ class mywindow(QtWidgets.QMainWindow):
 
     def clear(self):
         self.scene.clear()
+        self.dots = []
 
     def exit(self):
         self.close()
