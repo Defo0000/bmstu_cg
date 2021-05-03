@@ -38,6 +38,7 @@ class mywindow(QtWidgets.QMainWindow):
         self.create_scene()
 
         self.dots = []
+        self.figures = []
         self.current_color = QColor(255, 255, 255)
         self.scene_width = 880
         self.scene_height = 650
@@ -92,6 +93,9 @@ class mywindow(QtWidgets.QMainWindow):
 
         if not self.connect:
 
+            self.figures.append(self.dots)
+            self.dots = []
+
             self.connect = True
             self.to_end = len(self.dots)
 
@@ -134,7 +138,12 @@ class mywindow(QtWidgets.QMainWindow):
 
     def fill(self):
 
-        edges = self.make_edges()
+        if len(self.dots):
+            self.figures.append(self.dots)
+
+        edges = []
+        for figure in self.figures:
+            edges += self.make_edges(figure)
 
         y_group = [[] for i in range(self.scene_height)]
 
@@ -156,7 +165,6 @@ class mywindow(QtWidgets.QMainWindow):
             active_edges.sort(key=lambda edge: edge.x)
 
             # Выполняем закраску
-
             for i in range(0, len(active_edges), 2):
                 self.scene.addLine(active_edges[i].x, scanline,
                                    active_edges[i + 1].x, scanline, self.pen)
@@ -164,7 +172,7 @@ class mywindow(QtWidgets.QMainWindow):
                     QtWidgets.QApplication.processEvents()
                     time.sleep(0.01)
 
-            # Обновляем список активных ребер (удаляем неактивные, если они есть)
+            # Обновляем список активных ребер и удаляем неактивные, если они есть
             i = 0
             while i < len(active_edges):
                 active_edges[i].x += active_edges[i].dx
@@ -174,22 +182,22 @@ class mywindow(QtWidgets.QMainWindow):
                 else:
                     i += 1
 
-    def make_edges(self):
+    def make_edges(self, dots):
 
         edges = []
 
-        for i in range(len(self.dots) - 1):
-            x0, y0 = self.dots[i].x, self.dots[i].y
-            x1, y1 = self.dots[i + 1].x, self.dots[i + 1].y
+        for i in range(len(dots) - 1):
+            x0, y0 = dots[i].x, dots[i].y
+            x1, y1 = dots[i + 1].x, dots[i + 1].y
             if y0 > y1:
                 y1, y0 = y0, y1
                 x1, x0 = x0, x1
 
             edges.append(Edge(x0, y0, x1, y1))
 
-        i = len(self.dots) - 1
-        x0, y0 = self.dots[0].x, self.dots[0].y
-        x1, y1 = self.dots[i].x, self.dots[i].y
+        i = len(dots) - 1
+        x0, y0 = dots[0].x, dots[0].y
+        x1, y1 = dots[i].x, dots[i].y
         if y0 > y1:
             y1, y0 = y0, y1
             x1, x0 = x0, x1
@@ -305,6 +313,7 @@ class mywindow(QtWidgets.QMainWindow):
 
     def clear(self):
         self.scene.clear()
+        self.figures = []
         self.dots = []
 
     def exit(self):
