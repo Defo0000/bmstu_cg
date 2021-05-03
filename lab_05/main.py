@@ -43,6 +43,8 @@ class mywindow(QtWidgets.QMainWindow):
         self.scene_width = 880
         self.scene_height = 650
 
+        self.bordering_rectangle = [self.scene_height + 1, -1]
+
         self.is_key_ctrl_pressed = False
         self.is_key_h_pressed = False
         self.is_key_v_pressed = False
@@ -82,6 +84,108 @@ class mywindow(QtWidgets.QMainWindow):
         self.scene.setSceneRect(0, 0, 880, 650)
         graphicView.setGeometry(0, 0, 890, 660)
         self.scene.setBackgroundBrush(QColor(255, 255, 255))
+
+    def fill(self):
+
+        if len(self.dots):
+            self.figures.append(self.dots)
+
+        edges = []
+        for figure in self.figures:
+            edges += self.make_edges(figure)
+
+        y_groups = self.form_y_groups(edges)
+
+        active_edges = []
+
+        start = time.time()
+
+        for scanline in range(self.bordering_rectangle[0], self.bordering_rectangle[1] + 1):
+
+            # Обновляем список активных ребер (добавляем новые, если они есть)
+            for i in range(len(y_groups[scanline])):
+                active_edges.append(y_groups[scanline][i])
+            active_edges.sort(key=lambda edge: edge.x)
+
+            # Выполняем закраску
+            for i in range(0, len(active_edges), 2):
+                self.scene.addLine(active_edges[i].x, scanline, active_edges[i + 1].x, scanline, self.pen)
+                if self.ui.with_delay.isChecked():
+                    QtWidgets.QApplication.processEvents()
+                    time.sleep(0.01)
+
+            # Обновляем список активных ребер и удаляем неактивные, если они есть
+            self.update_active_edges(active_edges)
+
+        end = time.time()
+        self.show_time_info(end - start)
+
+    def show_time_info(self, time):
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Information)
+        msg.setStandardButtons(QMessageBox.Ok)
+        msg.setWindowTitle("Время закраски")
+        if self.ui.with_delay.isChecked():
+            text = "Время закраски c учётом задержки составило " + str("%.2f" % time) + "мс.\n\n"
+            to_sub = (self.bordering_rectangle[1] - self.bordering_rectangle[0]) * 0.01
+            text += "Время закраски без учёта задержки составило " + str("%.2f" % (time - to_sub)) + "мс."
+            msg.setText(text)
+        else:
+            msg.setText("Время закраски составило " + str("%.2f" % time) + "мс.")
+        msg.exec_()
+
+    def update_active_edges(self, active_edges):
+        i = 0
+        while i < len(active_edges):
+            active_edges[i].x += active_edges[i].dx
+            active_edges[i].scanline_amount -= 1
+            if active_edges[i].scanline_amount < 1:
+                active_edges.pop(i)
+            else:
+                i += 1
+
+    def form_y_groups(self, edges):
+        y_groups = [[] for i in range(self.scene_height)]
+
+        for edge in edges:
+            scanline_amount = abs(edge.y1 - edge.y0)
+
+            # Определение параметров окаймляющего прямоугольника
+            if self.bordering_rectangle[0] > edge.y0:
+                self.bordering_rectangle[0] = edge.y0
+            if self.bordering_rectangle[1] < edge.y1:
+                self.bordering_rectangle[1] = edge.y1
+
+            if scanline_amount:
+                dx = (edge.x1 - edge.x0) / scanline_amount
+                x_start = edge.x0
+                y_groups[edge.y0].append(GroupInfo(x_start, dx, scanline_amount))
+
+        return y_groups
+
+    def make_edges(self, dots):
+
+        edges = []
+
+        for i in range(len(dots) - 1):
+            x0, y0 = dots[i].x, dots[i].y
+            x1, y1 = dots[i + 1].x, dots[i + 1].y
+            if y0 > y1:
+                y1, y0 = y0, y1
+                x1, x0 = x0, x1
+
+            edges.append(Edge(x0, y0, x1, y1))
+
+        i = len(dots) - 1
+        x0, y0 = dots[0].x, dots[0].y
+        x1, y1 = dots[i].x, dots[i].y
+        if y0 > y1:
+            y1, y0 = y0, y1
+            x1, x0 = x0, x1
+
+        edges.append(Edge(x0, y0, x1, y1))
+
+        return edges
 
     def mousePressEvent(self, event):
 
@@ -135,76 +239,6 @@ class mywindow(QtWidgets.QMainWindow):
             msg.setWindowTitle("Добавление точки")
             msg.setText("Точка успешно добавлена.")
             msg.exec_()
-
-    def fill(self):
-
-        if len(self.dots):
-            self.figures.append(self.dots)
-
-        edges = []
-        for figure in self.figures:
-            edges += self.make_edges(figure)
-
-        y_group = [[] for i in range(self.scene_height)]
-
-        for edge in edges:
-            scanline_amount = abs(edge.y1 - edge.y0)
-            if scanline_amount:
-                dx = (edge.x1 - edge.x0) / scanline_amount
-                x_start = edge.x0
-                y_group[edge.y0].append(GroupInfo(x_start, dx, scanline_amount))
-
-        active_edges = []
-
-        for scanline in range(self.scene_height):
-
-            # Обновляем список активных ребер (добавляем новые, если они есть)
-            for i in range(len(y_group[scanline])):
-                active_edges.append(y_group[scanline][i])
-
-            active_edges.sort(key=lambda edge: edge.x)
-
-            # Выполняем закраску
-            for i in range(0, len(active_edges), 2):
-                self.scene.addLine(active_edges[i].x, scanline,
-                                   active_edges[i + 1].x, scanline, self.pen)
-                if self.ui.with_delay.isChecked():
-                    QtWidgets.QApplication.processEvents()
-                    time.sleep(0.01)
-
-            # Обновляем список активных ребер и удаляем неактивные, если они есть
-            i = 0
-            while i < len(active_edges):
-                active_edges[i].x += active_edges[i].dx
-                active_edges[i].scanline_amount -= 1
-                if active_edges[i].scanline_amount < 1:
-                    active_edges.pop(i)
-                else:
-                    i += 1
-
-    def make_edges(self, dots):
-
-        edges = []
-
-        for i in range(len(dots) - 1):
-            x0, y0 = dots[i].x, dots[i].y
-            x1, y1 = dots[i + 1].x, dots[i + 1].y
-            if y0 > y1:
-                y1, y0 = y0, y1
-                x1, x0 = x0, x1
-
-            edges.append(Edge(x0, y0, x1, y1))
-
-        i = len(dots) - 1
-        x0, y0 = dots[0].x, dots[0].y
-        x1, y1 = dots[i].x, dots[i].y
-        if y0 > y1:
-            y1, y0 = y0, y1
-            x1, x0 = x0, x1
-
-        edges.append(Edge(x0, y0, x1, y1))
-
-        return edges
 
     def end(self):
         self.current_color = self.get_current_color()
@@ -313,8 +347,10 @@ class mywindow(QtWidgets.QMainWindow):
 
     def clear(self):
         self.scene.clear()
-        self.figures = []
-        self.dots = []
+        self.figures.clear()
+        self.dots.clear()
+        self.to_end = 0
+        self.connect = True
 
     def exit(self):
         self.close()
