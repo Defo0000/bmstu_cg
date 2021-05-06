@@ -124,7 +124,7 @@ class mywindow(QtWidgets.QMainWindow):
                 proc_time += end - start
                 if self.ui.with_delay.isChecked():
                     QtWidgets.QApplication.processEvents()
-                    time.sleep(0.0001)
+                    time.sleep(0.00001)
                 start = time.time()
 
             # Обновляем список активных ребер и удаляем неактивные, если они есть
@@ -249,10 +249,10 @@ class mywindow(QtWidgets.QMainWindow):
             self.connect = True
             self.to_end = len(self.dots)
 
-            self.dots.append(Point(x, y))
-            self.draw_line(x, y, x, y)
-
-            self.add_to_table()
+            if x <= self.scene_width and y <= self.scene_height:
+                self.dots.append(Point(x, y))
+                self.draw_line(x, y, x, y)
+                self.add_to_table()
 
         else:
 
