@@ -1,6 +1,6 @@
 from PyQt5 import QtWidgets
 from PyQt5.QtGui import QPen, QColor, QFont
-from PyQt5.QtWidgets import QGraphicsScene, QGraphicsView, QMessageBox
+from PyQt5.QtWidgets import QGraphicsScene, QGraphicsView, QMessageBox, QTableWidgetItem
 from PyQt5.QtCore import Qt
 from window import Ui_MainWindow
 import sys
@@ -77,6 +77,12 @@ class mywindow(QtWidgets.QMainWindow):
         font.setPointSize(16)
         self.colors.setFont(font)
 
+        self.ui.table.setColumnCount(2)
+        self.ui.table.setRowCount(1)
+        self.ui.table.setHorizontalHeaderLabels(["X", "Y"])
+        self.ui.table.horizontalHeaderItem(0).setTextAlignment(Qt.AlignHCenter)
+        self.ui.table.horizontalHeaderItem(1).setTextAlignment(Qt.AlignHCenter)
+
     def create_scene(self):
         self.scene = QGraphicsScene()
         graphicView = QGraphicsView(self.scene, self)
@@ -125,13 +131,12 @@ class mywindow(QtWidgets.QMainWindow):
         msg.setIcon(QMessageBox.Information)
         msg.setStandardButtons(QMessageBox.Ok)
         msg.setWindowTitle("Время закраски")
+        msg.move(1050, 350)
         if self.ui.with_delay.isChecked():
-            text = "Время закраски c учётом задержки составило " + str("%.2f" % time) + "мс.\n\n"
-            to_sub = (self.bordering_rectangle[1] - self.bordering_rectangle[0]) * 0.01
-            text += "Время закраски без учёта задержки составило " + str("%.2f" % (time - to_sub)) + "мс."
+            text = "Время закраски составило " + str("%.3f" % time) + "мс.\n\n"
             msg.setText(text)
         else:
-            msg.setText("Время закраски составило " + str("%.2f" % time) + "мс.")
+            msg.setText("Время закраски составило " + str("%.3f" % time) + "мс.")
         msg.exec_()
 
     def update_active_edges(self, active_edges):
@@ -206,6 +211,8 @@ class mywindow(QtWidgets.QMainWindow):
             self.dots.append(Point(x, y))
             self.scene.addLine(x, y, x, y, self.pen)
 
+            self.add_to_table()
+
         else:
 
             last = len(self.dots) - 1
@@ -219,6 +226,17 @@ class mywindow(QtWidgets.QMainWindow):
 
                 self.dots.append(Point(x, y))
                 self.scene.addLine(x, y, self.dots[last].x, self.dots[last].y, self.pen)
+                self.add_to_table()
+
+    def add_to_table(self):
+        x, y = self.dots[-1].x, self.dots[-1].y
+        index = len(self.dots)
+        for dots in self.figures:
+            index += len(dots)
+        index -= 1
+        self.ui.table.setRowCount(index + 1)
+        self.ui.table.setItem(index, 0, QTableWidgetItem(str(int(x))))
+        self.ui.table.setItem(index, 1, QTableWidgetItem(str(int(y))))
 
     def add(self):
         res = self.get_dot()
@@ -232,6 +250,8 @@ class mywindow(QtWidgets.QMainWindow):
             last = len(self.dots) - 1
             self.dots.append(Point(x, y))
             self.scene.addLine(x, y, self.dots[last].x, self.dots[last].y, self.pen)
+
+            self.add_to_table()
 
             msg = QMessageBox()
             msg.setIcon(QMessageBox.Information)
@@ -351,6 +371,9 @@ class mywindow(QtWidgets.QMainWindow):
         self.dots.clear()
         self.to_end = 0
         self.connect = True
+        self.ui.table.setRowCount(1)
+        self.ui.table.setItem(0, 0, QTableWidgetItem(""))
+        self.ui.table.setItem(0, 1, QTableWidgetItem(""))
 
     def exit(self):
         self.close()
