@@ -111,8 +111,9 @@ class mywindow(QtWidgets.QMainWindow):
         for scanline in range(self.bordering_rectangle[0], self.bordering_rectangle[1] + 1):
 
             # Обновляем список активных ребер (добавляем новые, если они есть)
-            for i in range(len(y_groups[scanline])):
-                active_edges.append(y_groups[scanline][i])
+            while y_groups and y_groups[0][0] == scanline:
+                active_edges.append(y_groups[0][1])
+                y_groups.pop(0)
             active_edges.sort(key=lambda edge: edge.x)
 
             # Выполняем закраску
@@ -152,7 +153,7 @@ class mywindow(QtWidgets.QMainWindow):
                 i += 1
 
     def form_y_groups(self, edges):
-        y_groups = [[] for i in range(self.scene_height)]
+        y_groups = []
 
         for edge in edges:
             scanline_amount = abs(edge.y1 - edge.y0)
@@ -166,7 +167,9 @@ class mywindow(QtWidgets.QMainWindow):
             if scanline_amount:
                 dx = (edge.x1 - edge.x0) / scanline_amount
                 x_start = edge.x0
-                y_groups[edge.y0].append(GroupInfo(x_start, dx, scanline_amount))
+                y_groups.append([edge.y0, GroupInfo(x_start, dx, scanline_amount)])
+
+        y_groups.sort(key=lambda y_group: y_group[0])
 
         return y_groups
 
