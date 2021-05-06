@@ -104,6 +104,8 @@ class mywindow(QtWidgets.QMainWindow):
 
         active_edges = []
 
+        proc_time = 0
+
         start = time.time()
 
         for scanline in range(self.bordering_rectangle[0], self.bordering_rectangle[1] + 1):
@@ -116,15 +118,19 @@ class mywindow(QtWidgets.QMainWindow):
             # Выполняем закраску
             for i in range(0, len(active_edges), 2):
                 self.scene.addLine(active_edges[i].x, scanline, active_edges[i + 1].x, scanline, self.pen)
+                end = time.time()
+                proc_time += end - start
                 if self.ui.with_delay.isChecked():
                     QtWidgets.QApplication.processEvents()
                     time.sleep(0.01)
+                start = time.time()
 
             # Обновляем список активных ребер и удаляем неактивные, если они есть
             self.update_active_edges(active_edges)
 
         end = time.time()
-        self.show_time_info(end - start)
+        proc_time += end - start
+        self.show_time_info(proc_time)
 
     def show_time_info(self, time):
         msg = QMessageBox()
@@ -132,11 +138,7 @@ class mywindow(QtWidgets.QMainWindow):
         msg.setStandardButtons(QMessageBox.Ok)
         msg.setWindowTitle("Время закраски")
         msg.move(1050, 350)
-        if self.ui.with_delay.isChecked():
-            text = "Время закраски составило " + str("%.3f" % time) + "мс.\n\n"
-            msg.setText(text)
-        else:
-            msg.setText("Время закраски составило " + str("%.3f" % time) + "мс.")
+        msg.setText("Время закраски составило " + str("%.3f" % time) + "мс.")
         msg.exec_()
 
     def update_active_edges(self, active_edges):
@@ -377,6 +379,7 @@ class mywindow(QtWidgets.QMainWindow):
 
     def exit(self):
         self.close()
+
 
 app = QtWidgets.QApplication([])
 application = mywindow()
