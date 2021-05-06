@@ -5,6 +5,7 @@ from PyQt5.QtCore import Qt
 from window import Ui_MainWindow
 import sys
 import time
+import numpy as np
 
 
 class Point():
@@ -118,12 +119,12 @@ class mywindow(QtWidgets.QMainWindow):
 
             # Выполняем закраску
             for i in range(0, len(active_edges), 2):
-                self.scene.addLine(active_edges[i].x, scanline, active_edges[i + 1].x, scanline, self.pen)
+                self.draw_line(int(active_edges[i].x), scanline, int(active_edges[i + 1].x), scanline)
                 end = time.time()
                 proc_time += end - start
                 if self.ui.with_delay.isChecked():
                     QtWidgets.QApplication.processEvents()
-                    time.sleep(0.01)
+                    time.sleep(0.0001)
                 start = time.time()
 
             # Обновляем список активных ребер и удаляем неактивные, если они есть
@@ -133,14 +134,49 @@ class mywindow(QtWidgets.QMainWindow):
         proc_time += end - start
         self.show_time_info(proc_time)
 
-    def show_time_info(self, time):
-        msg = QMessageBox()
-        msg.setIcon(QMessageBox.Information)
-        msg.setStandardButtons(QMessageBox.Ok)
-        msg.setWindowTitle("Время закраски")
-        msg.move(1050, 350)
-        msg.setText("Время закраски составило " + str("%.3f" % time) + "мс.")
-        msg.exec_()
+    def draw_line(self, x_begin, y_begin, x_end, y_end):
+        line = self.brezenham_int(x_begin, y_begin, x_end, y_end)
+        for dot in line:
+            self.scene.addLine(dot.x, dot.y, dot.x, dot.y, self.pen)
+
+    def brezenham_int(self, x_begin, y_begin, x_end, y_end):
+        line = []
+        if (x_end == x_begin) and (y_end == y_begin):
+            line.append(Point(x_begin, y_begin))
+            return line
+        x, y = x_begin, y_begin
+        dx = x_end - x_begin
+        dy = y_end - y_begin
+        sx = int(np.sign(dx))
+        sy = int(np.sign(dy))
+        dx, dy = abs(dx), abs(dy)
+        if dx > dy:
+            fl = 0
+        else:
+            fl = 1
+            dx, dy = dy, dx
+        e = dy + dy - dx
+
+        if not fl:
+            for _ in range(dx):
+                line.append(Point(x, y))
+
+                if e >= 0:
+                    y += sy
+                    e -= dx + dx
+                x += sx
+                e += dy + dy
+        else:
+            for _ in range(dx):
+                line.append(Point(x, y))
+
+                if e >= 0:
+                    x += sx
+                    e -= dx + dx
+                y += sy
+                e += dy + dy
+
+        return line
 
     def update_active_edges(self, active_edges):
         i = 0
@@ -214,7 +250,7 @@ class mywindow(QtWidgets.QMainWindow):
             self.to_end = len(self.dots)
 
             self.dots.append(Point(x, y))
-            self.scene.addLine(x, y, x, y, self.pen)
+            self.draw_line(x, y, x, y)
 
             self.add_to_table()
 
@@ -230,7 +266,7 @@ class mywindow(QtWidgets.QMainWindow):
                     x = self.dots[last].x
 
                 self.dots.append(Point(x, y))
-                self.scene.addLine(x, y, self.dots[last].x, self.dots[last].y, self.pen)
+                self.draw_line(x, y, self.dots[last].x, self.dots[last].y)
                 self.add_to_table()
 
     def add_to_table(self):
@@ -254,7 +290,7 @@ class mywindow(QtWidgets.QMainWindow):
             x, y = res
             last = len(self.dots) - 1
             self.dots.append(Point(x, y))
-            self.scene.addLine(x, y, self.dots[last].x, self.dots[last].y, self.pen)
+            self.draw_line(x, y, self.dots[last].x, self.dots[last].y)
 
             self.add_to_table()
 
@@ -272,8 +308,8 @@ class mywindow(QtWidgets.QMainWindow):
         self.connect = False
 
         last = len(self.dots) - 1
-        self.scene.addLine(self.dots[self.to_end].x, self.dots[self.to_end].y,
-                           self.dots[last].x, self.dots[last].y, self.pen)
+        self.draw_line(self.dots[self.to_end].x, self.dots[self.to_end].y,
+                           self.dots[last].x, self.dots[last].y)
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_H:
@@ -292,6 +328,15 @@ class mywindow(QtWidgets.QMainWindow):
         if event.key() == Qt.Key_Control:
             self.is_key_ctrl_pressed = False
         super(mywindow, self).keyReleaseEvent(event)
+
+    def show_time_info(self, time):
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Information)
+        msg.setStandardButtons(QMessageBox.Ok)
+        msg.setWindowTitle("Время закраски")
+        msg.move(1050, 350)
+        msg.setText("Время закраски составило " + str("%.3f" % time) + "мс.")
+        msg.exec_()
 
     def get_current_color(self):
         color = self.colors.currentText()
