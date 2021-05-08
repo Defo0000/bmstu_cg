@@ -1,11 +1,12 @@
 from PyQt5 import QtWidgets
-from PyQt5.QtGui import QPen, QColor, QFont
+from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor, QFont, QRgba64
 from PyQt5.QtWidgets import QGraphicsScene, QGraphicsView, QMessageBox, QLineEdit, QTableWidgetItem, QPushButton
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QRect
 from window import Ui_MainWindow
 import sys
 import time
 import numpy as np
+from PIL import Image
 
 class Point():
     def __init__(self, x, y):
@@ -43,7 +44,7 @@ class mywindow(QtWidgets.QMainWindow):
         self.setMouseTracking(True)
 
         self.ui.add.clicked.connect(self.add)
-        #self.ui.fill.clicked.connect(self.fill)
+        self.ui.fill.clicked.connect(self.fill)
         self.ui.end.clicked.connect(self.end)
         self.ui.clear.clicked.connect(self.clear)
         self.ui.exit.clicked.connect(self.exit)
@@ -87,6 +88,10 @@ class mywindow(QtWidgets.QMainWindow):
 
     def create_scene(self):
         self.scene = QGraphicsScene()
+        self.pixmap = QPixmap("image.jpg")
+        self.painter = QPainter(self.pixmap)
+        self.painter.setBrush(Qt.black)
+        self.scene.addPixmap(self.pixmap)
         graphicView = QGraphicsView(self.scene, self)
         self.pen = QPen(Qt.black, 5)
         self.scene.setSceneRect(0, 0, 880, 750)
@@ -94,6 +99,7 @@ class mywindow(QtWidgets.QMainWindow):
         self.scene.setBackgroundBrush(QColor(255, 255, 255))
 
     def fill(self):
+        print(self.pixmap.toImage().pixelColor(50, 50) == Qt.white)
         pass
 
     def mousePressEvent(self, event):
@@ -117,6 +123,7 @@ class mywindow(QtWidgets.QMainWindow):
                 self.draw_line(x, y, x, y)
 
                 self.add_to_table()
+                self.add_to_pixmap()
 
             else:
 
@@ -132,7 +139,7 @@ class mywindow(QtWidgets.QMainWindow):
                     self.dots.append(Point(x, y))
                     self.draw_line(x, y, self.dots[last].x, self.dots[last].y)
                     self.add_to_table()
-
+                    self.add_to_pixmap()
         else:
 
             if self.pixel_params:
@@ -143,16 +150,6 @@ class mywindow(QtWidgets.QMainWindow):
             self.scene.addEllipse(x - 2, y - 2, 4, 4, Qt.black, Qt.black)
             self.scene.addEllipse(x - 20, y - 20, 40, 40, Qt.red)
             self.pixel_params = [x, y]
-
-    def add_to_table(self):
-        x, y = self.dots[-1].x, self.dots[-1].y
-        index = len(self.dots)
-        for dots in self.figures:
-            index += len(dots)
-        index -= 1
-        self.ui.table.setRowCount(index + 1)
-        self.ui.table.setItem(index, 0, QTableWidgetItem(str(int(x))))
-        self.ui.table.setItem(index, 1, QTableWidgetItem(str(int(y))))
 
     def add(self):
         res = self.get_dot()
@@ -168,6 +165,7 @@ class mywindow(QtWidgets.QMainWindow):
                 self.draw_line(x, y, self.dots[last].x, self.dots[last].y)
 
                 self.add_to_table()
+                self.add_to_pixmap()
 
                 msg = QMessageBox()
                 msg.setIcon(QMessageBox.Information)
@@ -202,6 +200,23 @@ class mywindow(QtWidgets.QMainWindow):
         last = len(self.dots) - 1
         self.draw_line(self.dots[self.to_end].x, self.dots[self.to_end].y,
                            self.dots[last].x, self.dots[last].y)
+
+    def add_to_table(self):
+        x, y = self.dots[-1].x, self.dots[-1].y
+        index = len(self.dots)
+        for dots in self.figures:
+            index += len(dots)
+        index -= 1
+        self.ui.table.setRowCount(index + 1)
+        self.ui.table.setItem(index, 0, QTableWidgetItem(str(int(x))))
+        self.ui.table.setItem(index, 1, QTableWidgetItem(str(int(y))))
+
+    def add_to_pixmap(self):
+        self.painter.setBrush(self.get_current_border_color())
+        x, y = self.dots[-1].x, self.dots[-1].y
+        self.painter.drawPoint(x, y)
+        self.scene.update()
+
 
     def draw_line(self, x_begin, y_begin, x_end, y_end):
         line = self.brezenham_int(x_begin, y_begin, x_end, y_end)
@@ -360,6 +375,10 @@ class mywindow(QtWidgets.QMainWindow):
 
     def clear(self):
         self.scene.clear()
+        self.figures.clear()
+        self.dots.clear()
+        self.to_end = 0
+        self.connect = True
         self.ui.table.setRowCount(1)
         self.ui.table.setItem(0, 0, QTableWidgetItem(""))
         self.ui.table.setItem(0, 1, QTableWidgetItem(""))
