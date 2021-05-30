@@ -1,7 +1,7 @@
 from PyQt5 import QtWidgets
-from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor, QFont, QRgba64
-from PyQt5.QtWidgets import QGraphicsScene, QGraphicsView, QMessageBox, QLineEdit, QTableWidgetItem, QPushButton
-from PyQt5.QtCore import Qt, QRect
+from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor, QFont
+from PyQt5.QtWidgets import QGraphicsScene, QGraphicsView, QMessageBox, QTableWidgetItem, QButtonGroup, QLabel
+from PyQt5.QtCore import Qt, QEventLoop, QPoint
 from window import Ui_MainWindow
 import sys
 import time
@@ -21,23 +21,34 @@ class mywindow(QtWidgets.QMainWindow):
         self.ui.setupUi(self)
         self.setWindowTitle("Лабораторная работа № 6: Реализация и исследование построчного алгоритма"
                             " затравочного заполнения.")
-        self.move(225, 50)
-        self.create_scene()
+        self.move(255, 50)
 
         self.dots = []
         self.figures = []
         self.current_color = QColor(255, 255, 255)
-        self.scene_width = 880
-        self.scene_height = 750
+        self.scene_width = 785
+        self.scene_height = 605
 
         self.is_key_ctrl_pressed = False
         self.is_key_h_pressed = False
         self.is_key_v_pressed = False
 
-        self.pixel_params = []
+        self.work_pixel = None
+        self.ellipse_params = []
 
         self.to_end = 0
         self.connect = True
+
+        self.table_index = 0
+
+        self.mode_dots = QButtonGroup()
+        self.mode_dots.addButton(self.ui.dot, 0)
+        self.mode_dots.addButton(self.ui.pixel, 1)
+        self.mode_dots.addButton(self.ui.ellipse, 2)
+
+        self.mood = QButtonGroup()
+        self.mood.addButton(self.ui.with_delay, 0)
+        self.mood.addButton(self.ui.no_delay, 1)
 
         self.ui.with_delay.setChecked(True)
         self.ui.dot.setChecked(True)
@@ -58,7 +69,7 @@ class mywindow(QtWidgets.QMainWindow):
         self.border_colors.addItem("Синий")
         self.border_colors.addItem("Желтый")
         self.border_colors.addItem("Розовый")
-        self.border_colors.setGeometry(920, 340, 280, 45)
+        self.border_colors.setGeometry(800, 330, 280, 40)
         self.border_colors.setStyleSheet("background-color: rgb(255, 255, 255); "
                                   "color: rgb(0, 0, 0)")
 
@@ -71,12 +82,12 @@ class mywindow(QtWidgets.QMainWindow):
         self.fill_colors.addItem("Синий")
         self.fill_colors.addItem("Желтый")
         self.fill_colors.addItem("Розовый")
-        self.fill_colors.setGeometry(920, 430, 280, 45)
+        self.fill_colors.setGeometry(800, 420, 280, 40)
         self.fill_colors.setStyleSheet("background-color: rgb(255, 255, 255); "
                                   "color: rgb(0, 0, 0)")
 
         font = QFont()
-        font.setPointSize(16)
+        font.setPointSize(14)
         self.border_colors.setFont(font)
         self.fill_colors.setFont(font)
 
@@ -86,142 +97,163 @@ class mywindow(QtWidgets.QMainWindow):
         self.ui.table.horizontalHeaderItem(0).setTextAlignment(Qt.AlignHCenter)
         self.ui.table.horizontalHeaderItem(1).setTextAlignment(Qt.AlignHCenter)
 
-    def create_scene(self):
+        self.ui.table_pixel.setColumnCount(2)
+        self.ui.table_pixel.setRowCount(1)
+        self.ui.table_pixel.setHorizontalHeaderLabels(["X", "Y"])
+        self.ui.table_pixel.horizontalHeaderItem(0).setTextAlignment(Qt.AlignHCenter)
+        self.ui.table_pixel.horizontalHeaderItem(1).setTextAlignment(Qt.AlignHCenter)
+
+        self.create_scene()
+
+    '''def create_scene(self):
         self.scene = QGraphicsScene()
-        self.pixmap = QPixmap("image.jpg")
+        #self.label = QLabel()
+        #self.label.setFrameRect(QRect(0, 0, 780, 600))
+        #self.label.setGeometry(0, 0, 790, 610)
+        #self.pixmap = QPixmap("image.jpg")
+        self.pixmap = QPixmap(self.scene_width, self.scene_height)
+        self.pixmap.fill(Qt.white)
         self.painter = QPainter(self.pixmap)
         self.painter.setBrush(Qt.black)
-        self.scene.addPixmap(self.pixmap)
+        #self.label.setPixmap(self.pixmap)
+        #self.label.update()
+        self.imItem = self.scene.addPixmap(self.pixmap)
         graphicView = QGraphicsView(self.scene, self)
-        self.pen = QPen(Qt.black, 5)
-        self.scene.setSceneRect(0, 0, 880, 750)
-        graphicView.setGeometry(0, 0, 890, 760)
-        self.scene.setBackgroundBrush(QColor(255, 255, 255))
+        self.pen = QPen(Qt.black, 1)
+        self.scene.setSceneRect(0, 0, 780, 600)
+        graphicView.setGeometry(0, 0, 790, 610)
+        self.scene.setBackgroundBrush(QColor(255, 255, 255))'''
+
+    def create_scene(self):
+        self.label = QLabel(self)
+        self.label.setGeometry(0, 0, 790, 610)
+        self.pixmap = QPixmap(self.label.size())
+        self.pixmap.fill(Qt.white)
+        self.label.setPixmap(self.pixmap)
+        self.label.show()
+        self.painter = QPainter(self.pixmap)
 
     def fill(self):
-        print(self.pixmap.toImage().pixelColor(50, 50) == Qt.white)
-        pass
+        stack = []
 
-    def mousePressEvent(self, event):
-
-        self.pen.setColor(self.get_current_border_color())
-
-        x = event.x()
-        y = event.y()
-
-        if self.ui.dot.isChecked():
-
-            if not self.connect:
-
-                self.figures.append(self.dots)
-                self.dots = []
-
-                self.connect = True
-                self.to_end = len(self.dots)
-
-                self.dots.append(Point(x, y))
-                self.draw_line(x, y, x, y)
-
-                self.add_to_table()
-                self.add_to_pixmap()
-
-            else:
-
-                last = len(self.dots) - 1
-
-                if x <= self.scene_width and y <= self.scene_height:
-                    if self.is_key_h_pressed and self.is_key_ctrl_pressed:
-                        y = self.dots[last].y
-
-                    if self.is_key_v_pressed and self.is_key_ctrl_pressed:
-                        x = self.dots[last].x
-
-                    self.dots.append(Point(x, y))
-                    self.draw_line(x, y, self.dots[last].x, self.dots[last].y)
-                    self.add_to_table()
-                    self.add_to_pixmap()
+        if self.work_pixel:
+            stack.append(self.work_pixel)
         else:
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Critical)
+            msg.setStandardButtons(QMessageBox.Ok)
+            msg.setWindowTitle("Ошибка")
+            msg.setText("Затравочный пиксель не введен.")
+            msg.exec_()
+            return
 
-            if self.pixel_params:
-                x_to_del, y_to_del = self.pixel_params
-                self.scene.addEllipse(x_to_del - 2, y_to_del - 2, 4, 4, Qt.white, Qt.white)
-                self.scene.addEllipse(x_to_del - 20, y_to_del - 20, 40, 40, Qt.white)
+        border_color = self.get_border_color()
+        fill_color = self.get_fill_color()
 
-            self.scene.addEllipse(x - 2, y - 2, 4, 4, Qt.black, Qt.black)
-            self.scene.addEllipse(x - 20, y - 20, 40, 40, Qt.red)
-            self.pixel_params = [x, y]
+        self.painter.setPen(QPen(self.get_fill_color(), 1))
 
-    def add(self):
-        res = self.get_dot()
+        proc_time = 0
 
-        if isinstance(res, tuple):
+        while stack:
+            start_time = time.time()
+            current_point = stack.pop()
+            self.paint(current_point.x, current_point.y)
 
-            self.pen.setColor(self.get_current_border_color())
-            x, y = res
+            x = current_point.x + 1
+            y = current_point.y
 
-            if self.ui.dot.isChecked():
-                last = len(self.dots) - 1
-                self.dots.append(Point(x, y))
-                self.draw_line(x, y, self.dots[last].x, self.dots[last].y)
+            pixel_color = self.color(x, y)
 
-                self.add_to_table()
-                self.add_to_pixmap()
+            while pixel_color != border_color and pixel_color != fill_color and x < self.scene_width:
+                self.paint(x, y)
+                x += 1
+                pixel_color = self.color(x, y)
 
-                msg = QMessageBox()
-                msg.setIcon(QMessageBox.Information)
-                msg.setStandardButtons(QMessageBox.Ok)
-                msg.setWindowTitle("Добавление точки")
-                msg.setText("Точка успешно добавлена.")
-                msg.exec_()
+            rx = x - 1
+            x = current_point.x - 1
 
-            else:
+            pixel_color = self.color(x, y)
 
-                if self.pixel_params:
-                    x_to_del, y_to_del = self.pixel_params
-                    self.scene.addEllipse(x_to_del - 2, y_to_del - 2, 4, 4, Qt.white, Qt.white)
-                    self.scene.addEllipse(x_to_del - 20, y_to_del - 20, 40, 40, Qt.white)
+            while pixel_color != border_color and pixel_color != fill_color and x > 0:
+                self.paint(x, y)
+                x -= 1
+                pixel_color = self.color(x, y)
 
-                self.scene.addEllipse(x - 2, y - 2, 4, 4, Qt.black, Qt.black)
-                self.scene.addEllipse(x - 20, y - 20, 40, 40, Qt.red)
-                self.pixel_params = [x, y]
+            lx = x + 1
 
-                msg = QMessageBox()
-                msg.setIcon(QMessageBox.Information)
-                msg.setStandardButtons(QMessageBox.Ok)
-                msg.setWindowTitle("Добавление затравочного пикселя")
-                msg.setText("Затравочный пиксель успешно добавлен.")
-                msg.exec_()
+            for i in [1, -1]:
+                x = lx
+                y = current_point.y + i
 
-    def end(self):
-        self.pen.setColor(self.get_current_border_color())
+                if y < 0 or y > self.scene_height:
+                    continue
 
-        self.connect = False
+                while x <= rx:
 
-        last = len(self.dots) - 1
-        self.draw_line(self.dots[self.to_end].x, self.dots[self.to_end].y,
-                           self.dots[last].x, self.dots[last].y)
+                    flag = False
 
-    def add_to_table(self):
-        x, y = self.dots[-1].x, self.dots[-1].y
-        index = len(self.dots)
-        for dots in self.figures:
-            index += len(dots)
-        index -= 1
-        self.ui.table.setRowCount(index + 1)
-        self.ui.table.setItem(index, 0, QTableWidgetItem(str(int(x))))
-        self.ui.table.setItem(index, 1, QTableWidgetItem(str(int(y))))
+                    pixel_color = self.color(x, y)
 
-    def add_to_pixmap(self):
-        self.painter.setBrush(self.get_current_border_color())
-        x, y = self.dots[-1].x, self.dots[-1].y
+                    while pixel_color != fill_color and pixel_color != border_color and x <= rx:
+                        flag = True
+                        x += 1
+                        pixel_color = self.color(x, y)
+
+                    if flag:
+                        if x == rx and pixel_color != border_color and pixel_color != fill_color:
+                            stack.append(Point(x, y))
+                        else:
+                            stack.append(Point(x - 1, y))
+
+                    xi = x
+                    while (pixel_color == border_color or pixel_color == fill_color) and x < rx:
+                        x += 1
+                        pixel_color = self.color(x, y)
+
+                    if x == xi:
+                        x += 1
+
+            end_time = time.time()
+            proc_time += end_time - start_time
+
+            if self.ui.with_delay.isChecked():
+                QtWidgets.QApplication.processEvents(QEventLoop.AllEvents)
+
+        self.show_time_info(proc_time)
+
+    def show_time_info(self, time):
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Information)
+        msg.setStandardButtons(QMessageBox.Ok)
+        msg.setWindowTitle("Время закраски")
+        msg.move(1050, 350)
+        msg.setText("Время закраски составило " + str("%.3f" % (time / 1000)) + " с.")
+        msg.exec_()
+
+
+    def color(self, x, y):
+        return self.pixmap.toImage().pixelColor(x, y)
+
+    def paint(self, x, y):
         self.painter.drawPoint(x, y)
-        self.scene.update()
+        self.label.setPixmap(self.pixmap)
 
-
-    def draw_line(self, x_begin, y_begin, x_end, y_end):
+    def draw_line(self, x_begin, y_begin, x_end, y_end, color):
+        self.painter.setPen(QPen(color, 1))
         line = self.brezenham_int(x_begin, y_begin, x_end, y_end)
         for dot in line:
-            self.scene.addLine(dot.x, dot.y, dot.x, dot.y, self.pen)
+            self.paint(dot.x, dot.y)
+
+    def add_to_table(self, x, y):
+        i = self.table_index
+        self.table_index += 1
+        self.ui.table.setRowCount(i + 1)
+        self.ui.table.setItem(i, 0, QTableWidgetItem(str(int(x))))
+        self.ui.table.setItem(i, 1, QTableWidgetItem(str(int(y))))
+
+    def add_pixel_to_table(self, x, y):
+        self.ui.table_pixel.setItem(0, 0, QTableWidgetItem(str(int(x))))
+        self.ui.table_pixel.setItem(0, 1, QTableWidgetItem(str(int(y))))
 
     def brezenham_int(self, x_begin, y_begin, x_end, y_end):
         line = []
@@ -261,6 +293,110 @@ class mywindow(QtWidgets.QMainWindow):
                 e += dy + dy
 
         return line
+
+    def mousePressEvent(self, event):
+
+        x = event.x()
+        y = event.y()
+
+        if not(x <= self.scene_width and y <= self.scene_height):
+            return
+
+        if self.ui.dot.isChecked():
+            self.ellipse_params = []
+
+            if not self.connect:
+
+                self.figures.append(self.dots)
+                self.dots = []
+
+                self.connect = True
+                self.to_end = len(self.dots)
+
+                self.dots.append(Point(x, y))
+                self.draw_line(x, y, x, y, self.get_border_color())
+                self.add_to_table(x, y)
+
+            else:
+
+                last = len(self.dots) - 1
+
+                if self.is_key_h_pressed and self.is_key_ctrl_pressed:
+                    y = self.dots[last].y
+
+                if self.is_key_v_pressed and self.is_key_ctrl_pressed:
+                    x = self.dots[last].x
+
+                self.dots.append(Point(x, y))
+                self.draw_line(x, y, self.dots[last].x, self.dots[last].y, self.get_border_color())
+                self.add_to_table(x, y)
+                
+        elif self.ui.pixel.isChecked():
+            self.ellipse_params = []
+
+            if self.work_pixel:
+                x_to_del, y_to_del = self.work_pixel.x, self.work_pixel.y
+                self.draw_line(x_to_del, y_to_del, x_to_del, y_to_del, Qt.white)
+
+            self.draw_line(x, y, x, y, self.get_fill_color())
+            self.work_pixel = Point(x, y)
+            self.add_pixel_to_table(x, y)
+
+        else:
+            if len(self.ellipse_params) == 1:
+                self.painter.setPen(QPen(self.get_border_color(), 1))
+                self.painter.drawEllipse(self.ellipse_params[0].x, self.ellipse_params[0].y,
+                                         (x - self.ellipse_params[0].x), (y - self.ellipse_params[0].y))
+                self.label.setPixmap(self.pixmap)
+                self.ellipse_params = []
+            else:
+                self.ellipse_params.append(Point(x, y))
+
+
+    def add(self):
+        res = self.get_dot()
+
+        if isinstance(res, tuple):
+
+            x, y = res
+
+            if self.ui.dot.isChecked():
+                last = len(self.dots) - 1
+                self.dots.append(Point(x, y))
+                self.draw_line(x, y, self.dots[last].x, self.dots[last].y, self.get_border_color())
+
+                msg = QMessageBox()
+                msg.setIcon(QMessageBox.Information)
+                msg.setStandardButtons(QMessageBox.Ok)
+                msg.setWindowTitle("Добавление точки")
+                msg.setText("Точка успешно добавлена.")
+                msg.exec_()
+
+                self.add_to_table(x, y)
+
+            elif self.ui.pixel.isChecked():
+
+                if self.work_pixel:
+                    x_to_del, y_to_del = self.work_pixel.x, self.work_pixel.y
+                    self.draw_line(x_to_del, y_to_del, x_to_del, y_to_del, Qt.white)
+
+                self.draw_line(x, y, x, y, self.get_fill_color())
+                self.work_pixel = Point(x, y)
+
+                msg = QMessageBox()
+                msg.setIcon(QMessageBox.Information)
+                msg.setStandardButtons(QMessageBox.Ok)
+                msg.setWindowTitle("Добавление затравочного пикселя")
+                msg.setText("Затравочный пиксель успешно добавлен.")
+                msg.exec_()
+                self.add_pixel_to_table(x, y)
+
+    def end(self):
+        self.connect = False
+
+        last = len(self.dots) - 1
+        self.draw_line(self.dots[self.to_end].x, self.dots[self.to_end].y,
+                           self.dots[last].x, self.dots[last].y, self.get_border_color())
 
     def get_dot(self):
         msg_error = QMessageBox()
@@ -321,7 +457,7 @@ class mywindow(QtWidgets.QMainWindow):
 
         return x, y
 
-    def get_current_border_color(self):
+    def get_border_color(self):
         color = self.border_colors.currentText()
         if color == "Черный":
             return QColor(0, 0, 0)
@@ -338,7 +474,7 @@ class mywindow(QtWidgets.QMainWindow):
         if color == "Розовый":
             return QColor(255, 110, 150)
 
-    def get_current_fill_color(self):
+    def get_fill_color(self):
         color = self.fill_colors.currentText()
         if color == "Черный":
             return QColor(0, 0, 0)
@@ -374,11 +510,18 @@ class mywindow(QtWidgets.QMainWindow):
         super(mywindow, self).keyReleaseEvent(event)
 
     def clear(self):
-        self.scene.clear()
+        self.pixmap.fill(Qt.white)
+        self.label.setPixmap(self.pixmap)
+        self.painter.setPen(QPen(self.get_border_color(), 1))
         self.figures.clear()
         self.dots.clear()
+        self.pixel_params = None
         self.to_end = 0
         self.connect = True
+        self.table_index = 0
+        self.ui.table_pixel.setRowCount(1)
+        self.ui.table_pixel.setItem(0, 0, QTableWidgetItem(""))
+        self.ui.table_pixel.setItem(0, 1, QTableWidgetItem(""))
         self.ui.table.setRowCount(1)
         self.ui.table.setItem(0, 0, QTableWidgetItem(""))
         self.ui.table.setItem(0, 1, QTableWidgetItem(""))
