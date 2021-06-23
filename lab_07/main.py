@@ -69,6 +69,7 @@ class mywindow(QtWidgets.QMainWindow):
         self.section_colors.addItem("Синий")
         self.section_colors.addItem("Желтый")
         self.section_colors.addItem("Розовый")
+        self.section_colors.setCurrentIndex(2)
         self.section_colors.setGeometry(800, 150, 280, 40)
         self.section_colors.setStyleSheet("background-color: rgb(255, 255, 255); "
                                          "color: rgb(0, 0, 0)")
@@ -81,6 +82,7 @@ class mywindow(QtWidgets.QMainWindow):
         self.result_colors.addItem("Синий")
         self.result_colors.addItem("Желтый")
         self.result_colors.addItem("Розовый")
+        self.result_colors.setCurrentIndex(3)
         self.result_colors.setGeometry(800, 250, 280, 40)
         self.result_colors.setStyleSheet("background-color: rgb(255, 255, 255); "
                                           "color: rgb(0, 0, 0)")
@@ -123,7 +125,7 @@ class mywindow(QtWidgets.QMainWindow):
             bits.append(self.set_bits(section[0], self.cutter))
             bits.append(self.set_bits(section[1], self.cutter))
 
-            #Полностью видимый отрезок
+            #Полностью видимый отрезок, обе точки внутри границы
             if bits[0] == 0 and bits[1] == 0:
                 self.painter.drawLine(section[0].x, section[0].y, section[1].x, section[1].y)
                 self.label.setPixmap(self.pixmap)
@@ -173,9 +175,9 @@ class mywindow(QtWidgets.QMainWindow):
                         cur_index += 1
                         continue
 
-                if m == 0:
-                    cur_index += 1
-                    continue
+                #if m == 0: # горизонтальный отрезок
+                #    cur_index += 1
+                #    continue
 
                 # Проверка пересечения с врехним ребром
                 if bits[cur_index] & mask_top:
@@ -192,6 +194,8 @@ class mywindow(QtWidgets.QMainWindow):
                         res.append(Point(x, self.cutter[BOTTOM]))
                         cur_index += 1
                         continue
+
+                break
 
             if res:
                 self.painter.drawLine(res[0].x, res[0].y, res[1].x, res[1].y)
@@ -257,6 +261,29 @@ class mywindow(QtWidgets.QMainWindow):
         self.draw_line(res_s[0], res_s[1], res_e[0], res_e[1])
         self.sections.append([Point(res_s[0], res_s[1]), Point(res_e[0], res_e[1])])
 
+    def find_end(self, x, y):
+        if self.cutter == []:
+            self.show_error("Не введен отсекатель.")
+            return
+
+        xl, xr, yb, yt = self.cutter
+
+        dist1 = abs(x - xl)
+        dist2 = abs(x - xr)
+        dist3 = abs(y - yb)
+        dist4 = abs(y - yt)
+
+        m = min(dist1, dist2, dist3, dist4)
+
+        if m == dist1:
+            return xl, y
+        if m == dist2:
+            return xr, y
+        if m == dist3:
+            return x, yb
+        if m == dist4:
+            return x, yt
+
     def find_nearest_end(self, x, y):
         if self.cutter == []:
             self.show_error("Не введен отсекатель.")
@@ -305,8 +332,12 @@ class mywindow(QtWidgets.QMainWindow):
         x, y = event.x(), event.y()
         self.last_point = Point(x, y)
         if self.ctrl_pressed:
+            if self.alt_pressed:
+                x, y = self.find_end(x, y)
+
             if not self.temp_section:
                 self.temp_section.append(Point(x, y))
+                self.draw_point(x, y)
             else:
                 x0, y0 = self.temp_section[0].x, self.temp_section[0].y
                 if self.v_pressed:
@@ -314,6 +345,7 @@ class mywindow(QtWidgets.QMainWindow):
                 elif self.h_pressed:
                     y = y0
 
+                self.draw_point(x, y)
                 self.draw_line(x0, y0, x, y)
 
                 self.sections.append([Point(x, y), Point(x0, y0)])
@@ -339,6 +371,10 @@ class mywindow(QtWidgets.QMainWindow):
                 self.update_cutter_label()
                 self.temp_cutter = []
 
+    def draw_point(self, x, y):
+        self.painter.setPen(QPen(Qt.black, 3))
+        self.painter.drawPoint(QPoint(x, y))
+        self.label.setPixmap(self.pixmap)
 
     def draw_line(self, x0, y0, x1, y1):
         self.painter.setPen(QPen(self.get_section_color(), 1))
@@ -402,13 +438,6 @@ class mywindow(QtWidgets.QMainWindow):
             self.h_pressed = False
         if event.key() == Qt.Key_Alt:
             self.alt_pressed = False
-            if self.last_point:
-                x, y = self.last_point.x, self.last_point.y
-                res = self.find_nearest_end(x, y)
-                if res != None:
-                    self.draw_line(x, y, res[0], res[1])
-                    self.sections.append([Point(x, y), Point(res[0], res[1])])
-
         super(mywindow, self).keyReleaseEvent(event)
 
     def get_dot(self, str_x, str_y):
